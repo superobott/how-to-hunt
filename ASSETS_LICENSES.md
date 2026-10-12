@@ -1,0 +1,14 @@
+# Asset licenses
+
+Every third-party asset used in the game must be listed here with its source and license.
+Placeholder assets must be marked as such so they are easy to find and replace.
+
+| Asset | Path | Source | License | Placeholder? |
+|-------|------|--------|---------|--------------|
+| _(none yet)_ | | | | |
+
+## Tools and engine
+| Component | Version | License |
+|-----------|---------|---------|
+| Godot Engine | 4.4.x | MIT |
+| GodotSteam (planned) | TBD | MIT |
