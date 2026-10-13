@@ -1,0 +1,28 @@
+# Godot 4
+.godot/
+.import/
+*.translation
+export_credentials.cfg
+.mono/
+data_*/
+
+# Builds and SteamPipe output
+build/
+steam/output/
+steam/content/
+*.exe
+*.pck
+*.zip
+
+# Secrets: never commit these
+.env
+*.key
+*.pem
+steam_credentials*
+steamcmd_login*
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
