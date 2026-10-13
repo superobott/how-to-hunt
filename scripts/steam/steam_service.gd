@@ -40,18 +40,32 @@ func initialize(steam_override: Object = null, app_id: int = -1) -> bool:
 	if _steam == null:
 		return _finish(false, "GodotSteam not found. Running without Steam.")
 
-	# GodotSteam 4.x exposes steamInitEx (status 0 = OK); older builds expose steamInit (status 1 = OK).
-	var ok_status := 0
+	# Steam reads the App ID from these variables on every GodotSteam version, so set them first.
+	# This keeps the ID we report in get_app_id() identical to the one Steam initializes with.
+	OS.set_environment("SteamAppId", str(_app_id))
+	OS.set_environment("SteamGameId", str(_app_id))
+
 	var result: Variant = null
 	if _steam.has_method("steamInitEx"):
-		result = _steam.call("steamInitEx")
+		# GodotSteam: steamInitEx(app_id, embed_callbacks) -> {status, verbal}, status 0 = OK.
+		result = _steam.call("steamInitEx", _app_id)
 	elif _steam.has_method("steamInit"):
-		ok_status = 1
+		# Older builds. No argument here: their first parameter is not the App ID, so the
+		# environment variables above carry it. Returns a bool, or {status, verbal} (status 1 = OK).
 		result = _steam.call("steamInit")
 	else:
 		return _finish(false, "Steam singleton has no init method. Running without Steam.")
 
+	return _interpret_init_result(result, _steam.has_method("steamInitEx"))
+
+
+func _interpret_init_result(result: Variant, is_init_ex: bool) -> bool:
+	if typeof(result) == TYPE_BOOL:
+		if result:
+			return _finish(true, "Steam initialized.")
+		return _finish(false, "Steam init failed. Running without Steam.")
 	if typeof(result) == TYPE_DICTIONARY and result.has("status"):
+		var ok_status := 0 if is_init_ex else 1
 		if int(result["status"]) == ok_status:
 			return _finish(true, "Steam initialized.")
 		var verbal: String = str(result.get("verbal", "unknown error"))
