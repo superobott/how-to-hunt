@@ -26,4 +26,5 @@ jobs:
         run: godot --headless --path . --import
 
       - name: Run tests
-        run: godot --headless --path . -s tests/run_tests.gd
+        # The wrapper also fails on GDScript runtime errors, which the runner alone cannot see.
+        run: tests/run_tests.sh
