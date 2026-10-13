@@ -11,6 +11,10 @@ const JUMP_VELOCITY := 8.0
 const CLIMB_SPEED := 3.0
 const MAX_PITCH := deg_to_rad(89.0)
 const CLIMB_START_INPUT := 0.1 ## minimum forward input to grab a wall
+const MANTLE_FORWARD_SPEED := 3.0 ## hop over a ledge when the wall ends under the player
+const MANTLE_UP_SPEED := 6.5
+const WALL_JUMP_BACK_SPEED := 4.0 ## push away from the wall when jumping off it
+const WALL_JUMP_UP_SPEED := 5.0
 
 
 ## World-space horizontal direction the player wants to move in.
@@ -66,6 +70,19 @@ static func should_stop_climb(
 ## Velocity while hanging on a wall: up or down with forward/back input, no sideways drift.
 static func climb_velocity(forward_input: float) -> Vector3:
 	return Vector3(0.0, clampf(forward_input, -1.0, 1.0) * CLIMB_SPEED, 0.0)
+
+
+## Small hop up and forward that carries the player over the top edge of a wall they climbed.
+## `forward` is the world-space direction the player faces (horizontal, unit length).
+static func mantle_velocity(forward: Vector3) -> Vector3:
+	var flat := Vector3(forward.x, 0.0, forward.z).normalized()
+	return flat * MANTLE_FORWARD_SPEED + Vector3.UP * MANTLE_UP_SPEED
+
+
+## Push off the wall. `away` is the world-space direction pointing away from the wall.
+static func wall_jump_velocity(away: Vector3) -> Vector3:
+	var flat := Vector3(away.x, 0.0, away.z).normalized()
+	return flat * WALL_JUMP_BACK_SPEED + Vector3.UP * WALL_JUMP_UP_SPEED
 
 
 static func clamp_pitch(pitch: float) -> float:
