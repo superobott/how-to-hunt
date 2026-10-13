@@ -1,14 +1,17 @@
 extends Control
-## Placeholder boot screen: shows the title and whether Steam is available.
+## Minimal placeholder HUD: game title and Steam status in the top-left corner.
 
 
 func _ready() -> void:
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var label := Label.new()
-	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 32)
-	label.text = "How to Hunt\n%s" % _steam_status_text()
+	label.position = Vector2(16.0, 12.0)
+	label.add_theme_font_size_override("font_size", 18)
+	label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.6))
+	label.add_theme_constant_override("shadow_offset_x", 1)
+	label.add_theme_constant_override("shadow_offset_y", 1)
+	label.text = "How to Hunt  |  %s" % _steam_status_text()
 	add_child(label)
 
 
