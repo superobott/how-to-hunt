@@ -32,6 +32,10 @@ func _init() -> void:
 					printerr("      %s" % error)
 
 	print("\n%d tests, %d failed" % [total, failed])
+	if total == 0:
+		# A renamed or missing suite must not leave CI green.
+		printerr("FAIL  no tests were discovered")
+		failed += 1
 	quit(1 if failed > 0 else 0)
 
 
