@@ -10,7 +10,7 @@
 set -uo pipefail
 
 GODOT="${GODOT:-godot}"
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 output="$("$GODOT" --headless --path . -s tests/run_tests.gd 2>&1)"
 status=$?
@@ -21,7 +21,8 @@ if [ "$status" -ne 0 ]; then
 	exit "$status"
 fi
 
-if printf '%s\n' "$output" | grep -q "SCRIPT ERROR"; then
+# Here-string, not a pipe: with pipefail, grep -q closing the pipe early could hide a match.
+if grep -q "SCRIPT ERROR" <<< "$output"; then
 	echo "run_tests.sh: GDScript runtime error found in test output" >&2
 	exit 1
 fi
