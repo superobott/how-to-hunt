@@ -41,8 +41,9 @@ func test_ensure_actions_is_idempotent_and_keeps_custom_bindings() -> void:
 		original_deadzone = InputMap.action_get_deadzone(InputSetup.JUMP)
 
 	InputSetup.ensure_actions()
-	var defaults := InputMap.action_get_events(InputSetup.JUMP).size()
-	assert_true(defaults > 0, "jump has default bindings")
+	if not existed:
+		# Only a fresh action gets defaults; an existing one is kept as the player left it.
+		assert_true(InputMap.action_get_events(InputSetup.JUMP).size() > 0, "jump has default bindings")
 
 	# Simulate the player rebinding jump, then run setup again.
 	InputMap.action_erase_events(InputSetup.JUMP)
