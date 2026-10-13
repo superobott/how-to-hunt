@@ -13,10 +13,11 @@
 Requires Godot 4.4.x.
 
 ```
-godot --headless --path . -s tests/run_tests.gd
+tests/run_tests.sh
 ```
 
-The runner exits with a non-zero code if any test fails.
+The script exits with a non-zero code if any test fails, if no tests are found, or if a test hits a
+GDScript runtime error. Set `GODOT=/path/to/godot` if `godot` is not on your `PATH`.
 
 ## Code rules
 - Game logic stays separate from UI and from Steam. Steam is reached only through `SteamService`.

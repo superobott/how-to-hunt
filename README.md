@@ -15,7 +15,7 @@ godot --path .
 
 ## Test
 ```
-godot --headless --path . -s tests/run_tests.gd
+tests/run_tests.sh
 ```
 
 ## Docs

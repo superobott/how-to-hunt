@@ -25,7 +25,9 @@ Rules:
 A single file, `data/config/game_config.json`, holds the Steam App ID. `steam_appid.txt` at the project root must match it (a test enforces this).
 
 ## Testing
-`tests/run_tests.gd` is a small SceneTree runner. It discovers `tests/test_*.gd` files and runs every method that starts with `test_`. It exits non-zero on failure, and CI runs it headless.
+`tests/run_tests.gd` is a small SceneTree runner. It discovers `tests/test_*.gd` files and runs every method that starts with `test_`. It exits non-zero on failure or when it finds no tests.
+
+`tests/run_tests.sh` wraps the runner and is what contributors and CI run. Godot 4.4 gives a runner no hook to catch script errors, so a test that hits a runtime error (such as calling a method on null) would print `SCRIPT ERROR` yet still report PASS. The wrapper fails on that output.
 
 ## Multiplayer (planned)
 Host-authoritative over Steam networking, 1 to 4 players, shared island and money, per-player inventory.
