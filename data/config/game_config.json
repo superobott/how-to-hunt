@@ -1,0 +1,4 @@
+{
+  "_comment": "steam_app_id is the single source of truth. 480 is Valve's public test App ID. Keep steam_appid.txt in sync (a test enforces this).",
+  "steam_app_id": 480
+}
