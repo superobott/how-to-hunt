@@ -32,17 +32,31 @@ func test_every_action_has_a_gamepad_binding() -> void:
 
 
 func test_ensure_actions_is_idempotent_and_keeps_custom_bindings() -> void:
+	# Remember exactly what the InputMap looked like so this test leaves it untouched.
+	var existed := InputMap.has_action(InputSetup.JUMP)
+	var original_events: Array[InputEvent] = []
+	var original_deadzone := 0.5
+	if existed:
+		original_events = InputMap.action_get_events(InputSetup.JUMP)
+		original_deadzone = InputMap.action_get_deadzone(InputSetup.JUMP)
+
 	InputSetup.ensure_actions()
-	var before := InputMap.action_get_events(InputSetup.JUMP).size()
-	# Simulate the player rebinding jump.
+	var defaults := InputMap.action_get_events(InputSetup.JUMP).size()
+	assert_true(defaults > 0, "jump has default bindings")
+
+	# Simulate the player rebinding jump, then run setup again.
 	InputMap.action_erase_events(InputSetup.JUMP)
 	var custom := InputEventKey.new()
 	custom.physical_keycode = KEY_F
 	InputMap.action_add_event(InputSetup.JUMP, custom)
 	InputSetup.ensure_actions()
 	assert_eq(InputMap.action_get_events(InputSetup.JUMP).size(), 1, "custom binding kept")
-	# Restore defaults so other tests are not affected.
-	InputMap.action_erase_events(InputSetup.JUMP)
-	InputMap.erase_action(InputSetup.JUMP)
-	InputSetup.ensure_actions()
-	assert_eq(InputMap.action_get_events(InputSetup.JUMP).size(), before, "defaults restored")
+
+	# Put everything back the way it was.
+	if existed:
+		InputMap.action_erase_events(InputSetup.JUMP)
+		for event in original_events:
+			InputMap.action_add_event(InputSetup.JUMP, event)
+		InputMap.action_set_deadzone(InputSetup.JUMP, original_deadzone)
+	else:
+		InputMap.erase_action(InputSetup.JUMP)
