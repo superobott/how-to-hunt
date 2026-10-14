@@ -58,6 +58,18 @@ static func can_start_climb(wall_ahead: bool, wall_climbable: bool, forward_inpu
 	return wall_ahead and wall_climbable and forward_input > CLIMB_START_INPUT
 
 
+## Horizontal unit direction pointing into the wall that was grabbed. It comes from the wall's
+## surface normal, so it stays correct however the player turns afterwards. Falls back to
+## `fallback_forward` when the normal is vertical, and to -Z when both are unusable.
+static func climb_direction(hit_normal: Vector3, fallback_forward: Vector3) -> Vector3:
+	var into_wall := Vector3(-hit_normal.x, 0.0, -hit_normal.z)
+	if into_wall.length_squared() < 0.0001:
+		into_wall = Vector3(fallback_forward.x, 0.0, fallback_forward.z)
+	if into_wall.length_squared() < 0.0001:
+		return Vector3.FORWARD
+	return into_wall.normalized()
+
+
 ## True when the player should let go: wall gone, jumped off, or walking back down onto the floor.
 static func should_stop_climb(
 	wall_ahead: bool, jump_pressed: bool, on_floor: bool, forward_input: float

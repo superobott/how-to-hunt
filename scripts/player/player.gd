@@ -13,6 +13,11 @@ const CAPSULE_HEIGHT := 1.8
 const EYE_HEIGHT := 1.6
 const WALL_RAY_HEIGHT := 0.5
 const WALL_RAY_LENGTH := 0.9
+## Ledge check used before a hop over the top: a ray dropped from just past the wall, above
+## the point where the wall ray lost contact. It only hits if there is ground to land on.
+const LEDGE_REACH := 0.6
+const LEDGE_RAY_HEIGHT := 1.4
+const LEDGE_RAY_DROP := 1.6
 
 @export var mouse_sensitivity: float = 0.0025 ## radians per pixel
 @export var stick_look_speed: float = 2.5 ## radians per second at full stick
@@ -28,6 +33,10 @@ var climbing: bool = false
 var _camera: Camera3D
 var _head: Node3D
 var _wall_ray: RayCast3D
+var _ledge_ray: RayCast3D
+## Horizontal direction into the wall being climbed. Fixed at grab time so turning the camera
+## mid-climb neither loses the wall nor changes where a ledge hop or wall jump sends the player.
+var _climb_dir: Vector3 = Vector3.FORWARD
 
 
 func _ready() -> void:
@@ -85,20 +94,42 @@ func _step_walking(move_input: Vector2, jump_pressed: bool, sprinting: bool, del
 ## Decides whether to grab, keep or let go of a climbable wall. Letting go can launch the player:
 ## a hop over the ledge at the top, or a push away from the wall when jumping off.
 func _update_climb_state(move_input: Vector2, jump_pressed: bool) -> void:
-	var wall_ahead := _wall_ray.is_colliding()
 	if not climbing:
+		var wall_ahead := _wall_ray.is_colliding()
 		var climbable := wall_ahead and _is_climbable(_wall_ray.get_collider())
-		climbing = Motion.can_start_climb(wall_ahead, climbable, move_input.y)
+		if Motion.can_start_climb(wall_ahead, climbable, move_input.y):
+			climbing = true
+			_climb_dir = Motion.climb_direction(
+				_wall_ray.get_collision_normal(), -global_transform.basis.z
+			)
 		return
 
-	var forward := -global_transform.basis.z
-	if not wall_ahead and move_input.y > 0.0:
-		climbing = false
-		velocity = Motion.mantle_velocity(forward)
+	# While climbing, keep the wall ray on the wall that was grabbed, not on where the camera points.
+	_wall_ray.global_basis = Basis.looking_at(_climb_dir, Vector3.UP)
+	_wall_ray.force_raycast_update()
+	var wall_ahead := _wall_ray.is_colliding()
+	if not wall_ahead and move_input.y > 0.0 and _ledge_ahead():
+		_end_climb()
+		velocity = Motion.mantle_velocity(_climb_dir)
 	elif Motion.should_stop_climb(wall_ahead, jump_pressed, is_on_floor(), move_input.y):
-		climbing = false
+		_end_climb()
 		if jump_pressed:
-			velocity = Motion.wall_jump_velocity(-forward)
+			velocity = Motion.wall_jump_velocity(-_climb_dir)
+
+
+func _end_climb() -> void:
+	climbing = false
+	_wall_ray.rotation = Vector3.ZERO # follow the camera direction again
+
+
+## True when there is ground just past the wall to hop onto. Without it, losing the wall means
+## the wall ended some other way (a gap, an overhang), and the player lets go instead of launching.
+func _ledge_ahead() -> bool:
+	_ledge_ray.global_position = (
+		global_position + _climb_dir * LEDGE_REACH + Vector3.UP * LEDGE_RAY_HEIGHT
+	)
+	_ledge_ray.force_raycast_update()
+	return _ledge_ray.is_colliding()
 
 
 func _enforce_bounds() -> void:
@@ -147,3 +178,9 @@ func _build_nodes() -> void:
 	_wall_ray.target_position = Vector3(0.0, 0.0, -WALL_RAY_LENGTH)
 	_wall_ray.collide_with_areas = false
 	add_child(_wall_ray)
+
+	_ledge_ray = RayCast3D.new()
+	_ledge_ray.name = "LedgeRay"
+	_ledge_ray.target_position = Vector3(0.0, -LEDGE_RAY_DROP, 0.0)
+	_ledge_ray.collide_with_areas = false
+	add_child(_ledge_ray)
