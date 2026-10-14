@@ -158,3 +158,20 @@ func test_mantle_ignores_the_vertical_part_of_forward() -> void:
 func test_wall_jump_pushes_away_and_up() -> void:
 	var velocity := Motion.wall_jump_velocity(Vector3(0, 0, 1))
 	assert_vec3_near(velocity, Vector3(0, Motion.WALL_JUMP_UP_SPEED, Motion.WALL_JUMP_BACK_SPEED), "wall jump")
+
+
+func test_climb_direction_points_into_the_wall() -> void:
+	# A wall facing +Z has its normal pointing at the player; climbing pushes toward -Z.
+	assert_vec3_near(Motion.climb_direction(Vector3(0, 0, 1), Vector3.RIGHT), Vector3(0, 0, -1), "flat wall")
+	assert_vec3_near(Motion.climb_direction(Vector3(1, 0, 0), Vector3.FORWARD), Vector3(-1, 0, 0), "side wall")
+
+
+func test_climb_direction_ignores_vertical_part_and_normalises() -> void:
+	var dir := Motion.climb_direction(Vector3(3.0, 5.0, 4.0), Vector3.FORWARD)
+	assert_vec3_near(dir, Vector3(-0.6, 0.0, -0.8), "slanted normal")
+	assert_near(dir.length(), 1.0, "unit length")
+
+
+func test_climb_direction_falls_back_when_normal_is_vertical() -> void:
+	assert_vec3_near(Motion.climb_direction(Vector3.UP, Vector3(0, 0.5, -2.0)), Vector3(0, 0, -1), "fallback facing")
+	assert_vec3_near(Motion.climb_direction(Vector3.UP, Vector3.UP), Vector3.FORWARD, "both unusable")

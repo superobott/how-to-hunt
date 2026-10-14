@@ -6,6 +6,7 @@ extends SceneTree
 
 const IslandBuilder := preload("res://scripts/world/island_builder.gd")
 const InputSetup := preload("res://scripts/core/input_setup.gd")
+const Motion := preload("res://scripts/core/player_motion.gd")
 
 var _failures: Array[String] = []
 var _checks := 0
@@ -33,6 +34,9 @@ func _run() -> void:
 	await _check_walking(player)
 	await _check_jump(player)
 	await _check_climb_to_first_tier(player)
+	await _check_turn_away_mid_climb(player, PI / 2.0, "a quarter turn")
+	await _check_turn_away_mid_climb(player, PI, "a half turn")
+	await _check_no_hop_without_a_ledge(world, player)
 	await _check_outer_clamp(player)
 	await _check_fall_and_respawn(world, player)
 	_finish()
@@ -90,6 +94,89 @@ func _check_climb_to_first_tier(player: CharacterBody3D) -> void:
 	var radius := Vector2(player.global_position.x, player.global_position.z).length()
 	var tier_radius: float = IslandBuilder.TIERS[1]["radius"]
 	_expect(radius < tier_radius, "player is on top of the tier, not outside it (r=%.1f)" % radius)
+
+
+## Turning away from the cliff mid-climb must not read as "reached the top". Wall contact has to
+## stay tied to the wall, not to where the camera points, otherwise the player is flung sideways
+## at mid-height by the ledge hop. The climb must end at the ledge, 7 m up, not where the turn happened.
+func _check_turn_away_mid_climb(player: CharacterBody3D, turn: float, label: String) -> void:
+	player.global_position = Vector3(0.0, 0.2, 46.0)
+	player.velocity = Vector3.ZERO
+	player.yaw = 0.0
+	await _frames(5)
+	var top: float = IslandBuilder.TIERS[1]["top"]
+	var turned := false
+	var climb_ended := false
+	var climb_end_y := 0.0
+	var max_flat_speed := 0.0
+	Input.action_press(InputSetup.MOVE_FORWARD)
+	for i in 600:
+		await physics_frame
+		if not turned:
+			if player.climbing and player.global_position.y > 2.5:
+				player.yaw += turn
+				turned = true
+			continue
+		if not climb_ended:
+			if player.climbing:
+				var flat := Vector2(player.velocity.x, player.velocity.z).length()
+				max_flat_speed = maxf(max_flat_speed, flat)
+			else:
+				climb_ended = true
+				climb_end_y = player.global_position.y
+				# Face the tier again, as a player would after the hop, so they walk onto it.
+				player.yaw -= turn
+		elif player.is_on_floor() and player.global_position.y > top - 0.3:
+			break
+	Input.action_release(InputSetup.MOVE_FORWARD)
+	await _frames(30)
+	_expect(turned, "reached mid-climb before turning (%s)" % label)
+	_expect(climb_ended and climb_end_y > top - 0.6,
+			"climb ends at the ledge, not mid-wall, after %s (ended at y=%.2f)" % [label, climb_end_y])
+	_expect(max_flat_speed < 0.5,
+			"no sideways drift while climbing after %s (peak %.2f m/s)" % [label, max_flat_speed])
+	_expect_near(player.global_position.y, top, 0.3, "player ends up on the first tier after %s" % label)
+
+
+## A wall that ends with nothing behind it (here a thin free-standing fence) is not a ledge.
+## Losing the wall at the top must let go, not fire the hop that carries a player over an edge.
+func _check_no_hop_without_a_ledge(world: Node, player: CharacterBody3D) -> void:
+	var fence := StaticBody3D.new()
+	fence.add_to_group(IslandBuilder.CLIMBABLE_GROUP)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(6.0, 4.0, 0.1)
+	shape.shape = box
+	fence.add_child(shape)
+	world.add_child(fence)
+	fence.global_position = Vector3(0.0, 2.0, 52.0) # on the plateau, outside the first tier
+	player.global_position = Vector3(0.0, 0.2, 52.7)
+	player.velocity = Vector3.ZERO
+	player.yaw = 0.0
+	await _frames(5)
+	var saw_climbing := false
+	var climb_ended := false
+	var end_y := 0.0
+	var end_velocity := Vector3.ZERO
+	Input.action_press(InputSetup.MOVE_FORWARD)
+	for i in 400:
+		await physics_frame
+		saw_climbing = saw_climbing or player.climbing
+		if saw_climbing and not player.climbing:
+			climb_ended = true
+			end_y = player.global_position.y
+			end_velocity = player.velocity
+			break
+	Input.action_release(InputSetup.MOVE_FORWARD)
+	fence.queue_free()
+	await _frames(60)
+	_expect(saw_climbing, "player grabs the free-standing fence")
+	_expect(climb_ended and end_y > 3.0, "player reaches the top of the fence (ended at y=%.2f)" % end_y)
+	# Letting go keeps at most the leftover climb speed (minus one gravity step). The ledge hop would
+	# add MANTLE_UP_SPEED and a forward push on top of that.
+	var flat := Vector2(end_velocity.x, end_velocity.z).length()
+	_expect(end_velocity.y <= Motion.CLIMB_SPEED and flat < 1.0,
+			"no ledge hop over a wall with nothing behind it (vy %.2f, flat %.2f m/s)" % [end_velocity.y, flat])
 
 
 func _check_outer_clamp(player: CharacterBody3D) -> void:
