@@ -140,3 +140,38 @@ func test_look_wraps_yaw_and_clamps_pitch() -> void:
 	assert_true(look.x < 0.0, "yaw wrapped past PI")
 	look = Motion.apply_look(0.0, Motion.MAX_PITCH, Vector2(0.0, -5.0))
 	assert_near(look.y, Motion.MAX_PITCH, "pitch clamped")
+
+
+func test_mantle_hops_up_and_forward_over_a_ledge() -> void:
+	var velocity := Motion.mantle_velocity(Vector3(0, 0, -1))
+	assert_vec3_near(velocity, Vector3(0, Motion.MANTLE_UP_SPEED, -Motion.MANTLE_FORWARD_SPEED), "mantle")
+	# The hop must clear the 0.5 m below the wall ray that triggers it.
+	var rise := Motion.MANTLE_UP_SPEED * Motion.MANTLE_UP_SPEED / (2.0 * Motion.GRAVITY)
+	assert_true(rise > 0.5 + 0.2, "mantle rises well above the 0.5 m trigger height")
+
+
+func test_mantle_ignores_the_vertical_part_of_forward() -> void:
+	var velocity := Motion.mantle_velocity(Vector3(0, 0.8, -0.6))
+	assert_near(Vector2(velocity.x, velocity.z).length(), Motion.MANTLE_FORWARD_SPEED, "horizontal speed")
+
+
+func test_wall_jump_pushes_away_and_up() -> void:
+	var velocity := Motion.wall_jump_velocity(Vector3(0, 0, 1))
+	assert_vec3_near(velocity, Vector3(0, Motion.WALL_JUMP_UP_SPEED, Motion.WALL_JUMP_BACK_SPEED), "wall jump")
+
+
+func test_climb_direction_points_into_the_wall() -> void:
+	# A wall facing +Z has its normal pointing at the player; climbing pushes toward -Z.
+	assert_vec3_near(Motion.climb_direction(Vector3(0, 0, 1), Vector3.RIGHT), Vector3(0, 0, -1), "flat wall")
+	assert_vec3_near(Motion.climb_direction(Vector3(1, 0, 0), Vector3.FORWARD), Vector3(-1, 0, 0), "side wall")
+
+
+func test_climb_direction_ignores_vertical_part_and_normalises() -> void:
+	var dir := Motion.climb_direction(Vector3(3.0, 5.0, 4.0), Vector3.FORWARD)
+	assert_vec3_near(dir, Vector3(-0.6, 0.0, -0.8), "slanted normal")
+	assert_near(dir.length(), 1.0, "unit length")
+
+
+func test_climb_direction_falls_back_when_normal_is_vertical() -> void:
+	assert_vec3_near(Motion.climb_direction(Vector3.UP, Vector3(0, 0.5, -2.0)), Vector3(0, 0, -1), "fallback facing")
+	assert_vec3_near(Motion.climb_direction(Vector3.UP, Vector3.UP), Vector3.FORWARD, "both unusable")

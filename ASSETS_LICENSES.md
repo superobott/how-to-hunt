@@ -12,3 +12,9 @@ Placeholder assets must be marked as such so they are easy to find and replace.
 |-----------|---------|---------|
 | Godot Engine | 4.4.x | MIT |
 | GodotSteam (planned) | TBD | MIT |
+
+## Placeholder content
+| Content | Where | Note |
+|---------|-------|------|
+| Island, mountain tiers and sea | `scripts/world/island_builder.gd` | Generated from code as flat-coloured cylinders and a plane. No third-party assets. Placeholder, to be replaced by authored art. |
+| Sky | `scripts/world/world.gd` | Godot's built-in procedural sky. |
