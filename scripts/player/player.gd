@@ -13,9 +13,9 @@ const CAPSULE_HEIGHT := 1.8
 const EYE_HEIGHT := 1.6
 const WALL_RAY_HEIGHT := 0.5
 const WALL_RAY_LENGTH := 0.9
-## Ledge check used before a hop over the top: a ray dropped from just past the wall, above
+## Ledge check used before a hop over the top: a ray dropped from just past the wall face, above
 ## the point where the wall ray lost contact. It only hits if there is ground to land on.
-const LEDGE_REACH := 0.6
+const LEDGE_PAST_WALL := 0.2
 const LEDGE_RAY_HEIGHT := 1.4
 const LEDGE_RAY_DROP := 1.6
 
@@ -37,6 +37,9 @@ var _ledge_ray: RayCast3D
 ## Horizontal direction into the wall being climbed. Fixed at grab time so turning the camera
 ## mid-climb neither loses the wall nor changes where a ledge hop or wall jump sends the player.
 var _climb_dir: Vector3 = Vector3.FORWARD
+## Where the wall ray touched the wall when the climb started. The ledge check is measured from
+## here, not from the player, so it works however far from the wall the player grabbed on.
+var _wall_point: Vector3 = Vector3.ZERO
 
 
 func _ready() -> void:
@@ -102,6 +105,7 @@ func _update_climb_state(move_input: Vector2, jump_pressed: bool) -> void:
 			_climb_dir = Motion.climb_direction(
 				_wall_ray.get_collision_normal(), -global_transform.basis.z
 			)
+			_wall_point = _wall_ray.get_collision_point()
 		return
 
 	# While climbing, keep the wall ray on the wall that was grabbed, not on where the camera points.
@@ -125,9 +129,8 @@ func _end_climb() -> void:
 ## True when there is ground just past the wall to hop onto. Without it, losing the wall means
 ## the wall ended some other way (a gap, an overhang), and the player lets go instead of launching.
 func _ledge_ahead() -> bool:
-	_ledge_ray.global_position = (
-		global_position + _climb_dir * LEDGE_REACH + Vector3.UP * LEDGE_RAY_HEIGHT
-	)
+	var base := Vector3(_wall_point.x, global_position.y, _wall_point.z)
+	_ledge_ray.global_position = base + _climb_dir * LEDGE_PAST_WALL + Vector3.UP * LEDGE_RAY_HEIGHT
 	_ledge_ray.force_raycast_update()
 	return _ledge_ray.is_colliding()
 

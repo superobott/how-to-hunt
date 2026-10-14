@@ -36,6 +36,7 @@ func _run() -> void:
 	await _check_climb_to_first_tier(player)
 	await _check_turn_away_mid_climb(player, PI / 2.0, "a quarter turn")
 	await _check_turn_away_mid_climb(player, PI, "a half turn")
+	await _check_hop_after_far_grab(player)
 	await _check_no_hop_without_a_ledge(world, player)
 	await _check_outer_clamp(player)
 	await _check_fall_and_respawn(world, player)
@@ -136,6 +137,35 @@ func _check_turn_away_mid_climb(player: CharacterBody3D, turn: float, label: Str
 	_expect(max_flat_speed < 0.5,
 			"no sideways drift while climbing after %s (peak %.2f m/s)" % [label, max_flat_speed])
 	_expect_near(player.global_position.y, top, 0.3, "player ends up on the first tier after %s" % label)
+
+
+## Grabbing the wall from far away (the wall ray reaches 0.9 m) must still end in the ledge hop,
+## not in a plain let-go that only works because forward input carries the player over.
+func _check_hop_after_far_grab(player: CharacterBody3D) -> void:
+	var face_z := 42.0 # first cliff face on the +Z side, at x = 0
+	player.global_position = Vector3(0.0, 0.2, face_z + 0.85)
+	player.velocity = Vector3.ZERO
+	player.yaw = 0.0
+	await _frames(5)
+	var saw_climbing := false
+	var end_velocity := Vector3.ZERO
+	var climb_ended := false
+	Input.action_press(InputSetup.MOVE_FORWARD)
+	for i in 700:
+		await physics_frame
+		saw_climbing = saw_climbing or player.climbing
+		if saw_climbing and not climb_ended and not player.climbing:
+			climb_ended = true
+			end_velocity = player.velocity
+		if climb_ended and player.is_on_floor():
+			break
+	Input.action_release(InputSetup.MOVE_FORWARD)
+	await _frames(30)
+	_expect(saw_climbing, "player grabs the cliff from 0.85 m away")
+	# The hop sets vy near MANTLE_UP_SPEED. A plain let-go leaves at most the climb speed.
+	_expect(end_velocity.y > Motion.CLIMB_SPEED + 1.0,
+			"ledge hop fires after a far grab (vy %.2f, a let-go would be <= %.1f)" % [end_velocity.y, Motion.CLIMB_SPEED])
+	_expect_near(player.global_position.y, 7.0, 0.3, "player ends up standing on the first tier after a far grab")
 
 
 ## A wall that ends with nothing behind it (here a thin free-standing fence) is not a ledge.
