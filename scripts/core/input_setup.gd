@@ -13,12 +13,17 @@ const LOOK_LEFT := "look_left"
 const LOOK_RIGHT := "look_right"
 const LOOK_UP := "look_up"
 const LOOK_DOWN := "look_down"
+const SHOOT := "hunt_shoot"
+const AIM := "hunt_aim"
+const INTERACT := "hunt_interact"
+const UPGRADE := "hunt_upgrade"
 
 const STICK_DEADZONE := 0.2
 
 const ALL_ACTIONS: Array[String] = [
 	MOVE_FORWARD, MOVE_BACK, MOVE_LEFT, MOVE_RIGHT, JUMP, SPRINT,
 	LOOK_LEFT, LOOK_RIGHT, LOOK_UP, LOOK_DOWN,
+	SHOOT, AIM, INTERACT, UPGRADE,
 ]
 
 
@@ -35,6 +40,14 @@ static func ensure_actions() -> void:
 	_ensure(LOOK_RIGHT, [_axis(JOY_AXIS_RIGHT_X, 1.0)])
 	_ensure(LOOK_UP, [_axis(JOY_AXIS_RIGHT_Y, -1.0)])
 	_ensure(LOOK_DOWN, [_axis(JOY_AXIS_RIGHT_Y, 1.0)])
+	_ensure(SHOOT, [_mouse(MOUSE_BUTTON_LEFT), _axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)])
+	_ensure(AIM, [_mouse(MOUSE_BUTTON_RIGHT), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0)])
+	_ensure(INTERACT, [_key(KEY_E), _button(JOY_BUTTON_X)])
+	_ensure(UPGRADE, [_key(KEY_U), _button(JOY_BUTTON_Y)])
+	if InputMap.has_action("ui_cancel"):
+		var cancel := _button(JOY_BUTTON_B)
+		if not InputMap.action_has_event("ui_cancel", cancel):
+			InputMap.action_add_event("ui_cancel", cancel)
 
 
 static func _ensure(action: String, events: Array[InputEvent]) -> void:
@@ -60,5 +73,11 @@ static func _axis(axis: JoyAxis, value: float) -> InputEventJoypadMotion:
 
 static func _button(button: JoyButton) -> InputEventJoypadButton:
 	var event := InputEventJoypadButton.new()
+	event.button_index = button
+	return event
+
+
+static func _mouse(button: MouseButton) -> InputEventMouseButton:
+	var event := InputEventMouseButton.new()
 	event.button_index = button
 	return event

@@ -19,6 +19,7 @@ SteamService="*res://scripts/steam/steam_service.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/stretch/mode="canvas_items"
 
 [rendering]
 

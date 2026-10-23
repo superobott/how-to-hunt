@@ -20,6 +20,8 @@ func _initialize() -> void:
 func _run() -> void:
 	var scene: PackedScene = load("res://scenes/main.tscn")
 	var world: Node = scene.instantiate()
+	world.set("persistence_enabled", false)
+	world.set("wildlife_enabled", false)
 	root.add_child(world)
 	# During _initialize the tree is not running yet, so _ready only fires after the first frame.
 	await process_frame
