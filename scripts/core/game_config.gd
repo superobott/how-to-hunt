@@ -12,7 +12,11 @@ static func load_config(path: String = CONFIG_PATH) -> Dictionary:
 		push_warning("GameConfig: %s not found, using defaults." % path)
 		return {}
 	var text := FileAccess.get_file_as_string(path)
-	var parsed: Variant = JSON.parse_string(text)
+	var parser := JSON.new()
+	if parser.parse(text) != OK:
+		push_warning("GameConfig: %s is not valid JSON, using defaults." % path)
+		return {}
+	var parsed: Variant = parser.data
 	if typeof(parsed) != TYPE_DICTIONARY:
 		push_warning("GameConfig: %s is not a valid JSON object, using defaults." % path)
 		return {}

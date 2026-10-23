@@ -1,0 +1,57 @@
+{
+  "animals": {
+    "rabbit": {
+      "name_key": "animal.rabbit",
+      "hp": 20,
+      "speed": 4.2,
+      "xp": 20,
+      "value": 12,
+      "rare_chance": 0.12,
+      "rare_multiplier": 3.0,
+      "behavior": "flee",
+      "body_color": [0.75, 0.65, 0.5],
+      "radius": 0.48
+    },
+    "boar": {
+      "name_key": "animal.boar",
+      "hp": 70,
+      "speed": 3.0,
+      "xp": 45,
+      "value": 30,
+      "rare_chance": 0.08,
+      "rare_multiplier": 3.0,
+      "behavior": "roam",
+      "body_color": [0.39, 0.25, 0.2],
+      "radius": 0.85
+    }
+  },
+  "tools": {
+    "starter_bow": {
+      "name_key": "tool.starter_bow",
+      "damage": 25,
+      "speed": 60.0,
+      "reload": 0.9,
+      "price": 0,
+      "next": "hunters_bow"
+    },
+    "hunters_bow": {
+      "name_key": "tool.hunters_bow",
+      "damage": 45,
+      "speed": 85.0,
+      "reload": 0.65,
+      "price": 48,
+      "next": "mountain_bow"
+    },
+    "mountain_bow": {
+      "name_key": "tool.mountain_bow",
+      "damage": 75,
+      "speed": 110.0,
+      "reload": 0.45,
+      "price": 240,
+      "next": ""
+    }
+  },
+  "economy": {"capacity": 8, "trick_multiplier": 1.5},
+  "progression": {"xp_per_level": 100},
+  "spawn": {"count": 10, "inner_radius": 44.0, "outer_radius": 56.0, "respawn_seconds": 12.0}
+}
