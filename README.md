@@ -22,8 +22,16 @@ Status: playable local hunting prototype. Steam online co-op is planned and is *
 godot --path .
 ```
 
-On Windows, `./play.ps1` uses `GODOT`, Godot on PATH, or the locally downloaded 4.4.1 engine in
-`build/tools/godot-4.4.1/`. The engine download is ignored by Git and is not part of the repository.
+On Windows, double-click `play.cmd`, or run it from any PowerShell folder:
+
+```powershell
+& 'C:\path\to\how-to-hunt\play.cmd'
+```
+
+This launcher starts Godot directly and works when PowerShell scripts are disabled. It uses `GODOT`,
+the locally downloaded 4.4.1 engine in `build/tools/godot-4.4.1/`, or Godot on PATH. The engine download
+is ignored by Git and is not part of the repository. `play.ps1` remains available on systems that
+permit PowerShell scripts.
 
 You spawn on the plateau at the foot of a terraced mountain. Click the window to capture the mouse, Esc to release it.
 

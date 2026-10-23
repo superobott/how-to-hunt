@@ -36,3 +36,10 @@ benchmark; stable 60 FPS on the target hardware has not been verified.
 Steam transport/lobbies/invites, achievements/stats/cloud, hostile-animal damage, collection log,
 quests/bosses/zone gates, other movement families and weapons, settings/rebinding, and release exports.
 The playable expedition currently uses local authority and local saves.
+
+## Windows launcher follow-up
+
+`play.cmd` was verified from `C:\Windows\System32` using Windows PowerShell with a process execution
+policy of `Restricted`. It started the actual game in headless mode and exited successfully after two
+frames, forwarding the command-line flags. No execution-policy setting was changed. Use this launcher
+when PowerShell blocks `play.ps1`.
