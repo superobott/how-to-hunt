@@ -10,6 +10,7 @@ const CLIMBABLE_GROUP := &"climbable"
 const BASE_DEPTH := 6.0 ## how far every tier extends below y = 0, so there are no gaps
 const SEA_HEIGHT := -30.0
 const RADIAL_SEGMENTS := 32
+const TerraceShader := preload("res://shaders/terrace.gdshader")
 
 ## Tier 0 is the plateau the player spawns on. Each later tier sits on top of the previous one.
 ## "top" is the walkable height of the tier's flat top.
@@ -63,7 +64,12 @@ static func _make_tier(index: int) -> StaticBody3D:
 	mesh.bottom_radius = radius
 	mesh.height = height
 	mesh.radial_segments = RADIAL_SEGMENTS
-	mesh.material = _flat_material(tier["color"])
+	var material := ShaderMaterial.new()
+	material.shader = TerraceShader
+	material.set_shader_parameter("meadow_color", tier["color"])
+	material.set_shader_parameter("cliff_color", Color(0.50, 0.43, 0.33).lerp(tier["color"], 0.2))
+	material.set_shader_parameter("half_height", height / 2.0)
+	mesh.material = material
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.mesh = mesh
 	body.add_child(mesh_instance)
