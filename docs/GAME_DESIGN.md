@@ -30,3 +30,18 @@ The loop is inspired in general terms by "start with nothing, earn money, buy be
 
 ## Co-op
 1 to 4 players via Steam lobbies. Shared island and money, separate inventories.
+
+## Current playable slice
+The first expedition starts with an unlimited-arrow Makeshift Bow. Rabbits flee nearby players;
+boars roam and flee after being hit. Both stay on the lower meadow around the mountain. Golden
+variants are rare and more valuable. Headshots deal extra damage, and headshots or hits from at
+least 18 metres award trick-shot bonuses. Defeated animals disappear in colorful puffs and leave
+a collectible satchel. No blood or gore is used.
+
+The hunter carries up to eight trophies to Moss & Ember's amber-awning stall. Selling turns the
+bag into coins. Four ordinary rabbits pay for a Hunter's Bow; a Mountain Bow is the next goal.
+XP and hunter levels provide early feedback; they do not gate zones in this slice. Camp interactions
+use the same actions on keyboard and controller. Falling returns the hunter to camp with gear intact.
+
+The HUD guides the player through the first hunt, pickup, sale and upgrade. The slice is single-player;
+the Steam co-op design above remains the intended product direction.
