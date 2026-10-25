@@ -3,22 +3,24 @@ extends RefCounted
 ## Every tier is a StaticBody3D with a cylinder collider. Their sheer sides are in the
 ## "climbable" group, so the player can walk into a cliff and climb it.
 ##
-## PLACEHOLDER ART: flat-coloured cylinders and a plane for the sea. No third-party assets.
-## Replace with authored meshes later. Keep the collision layout (tier radii and heights) in sync.
+## Original procedural meadow, layered rock and water. The visual mesh follows the
+## cylinder collision closely so climbing and ledges remain predictable.
 
 const CLIMBABLE_GROUP := &"climbable"
 const BASE_DEPTH := 6.0 ## how far every tier extends below y = 0, so there are no gaps
 const SEA_HEIGHT := -30.0
-const RADIAL_SEGMENTS := 32
+const TerrainMesh := preload("res://scripts/world/terrain_mesh.gd")
 const TerraceShader := preload("res://shaders/terrace.gdshader")
+const MeadowShader := preload("res://shaders/meadow.gdshader")
+const WaterShader := preload("res://shaders/water.gdshader")
 
 ## Tier 0 is the plateau the player spawns on. Each later tier sits on top of the previous one.
 ## "top" is the walkable height of the tier's flat top.
 const TIERS: Array[Dictionary] = [
-	{"radius": 60.0, "top": 0.0, "color": Color(0.36, 0.62, 0.30)},
-	{"radius": 42.0, "top": 7.0, "color": Color(0.45, 0.55, 0.32)},
-	{"radius": 26.0, "top": 15.0, "color": Color(0.55, 0.50, 0.38)},
-	{"radius": 12.0, "top": 24.0, "color": Color(0.82, 0.84, 0.88)},
+	{"radius": 60.0, "top": 0.0, "color": Color(0.39, 0.57, 0.26)},
+	{"radius": 42.0, "top": 7.0, "color": Color(0.48, 0.58, 0.30)},
+	{"radius": 26.0, "top": 15.0, "color": Color(0.53, 0.56, 0.34)},
+	{"radius": 12.0, "top": 24.0, "color": Color(0.67, 0.69, 0.53)},
 ]
 
 
@@ -59,19 +61,19 @@ static func _make_tier(index: int) -> StaticBody3D:
 	collider.shape = shape
 	body.add_child(collider)
 
-	var mesh := CylinderMesh.new()
-	mesh.top_radius = radius
-	mesh.bottom_radius = radius
-	mesh.height = height
-	mesh.radial_segments = RADIAL_SEGMENTS
-	var material := ShaderMaterial.new()
-	material.shader = TerraceShader
-	material.set_shader_parameter("meadow_color", tier["color"])
-	material.set_shader_parameter("cliff_color", Color(0.50, 0.43, 0.33).lerp(tier["color"], 0.2))
-	material.set_shader_parameter("half_height", height / 2.0)
-	mesh.material = material
+	var meadow := ShaderMaterial.new()
+	meadow.shader = MeadowShader
+	meadow.set_shader_parameter("meadow_color", tier["color"])
+	meadow.set_shader_parameter("tier_radius", radius)
+	meadow.set_shader_parameter("terrace_index", float(index))
+	var cliff := ShaderMaterial.new()
+	cliff.shader = TerraceShader
+	cliff.set_shader_parameter("meadow_color", tier["color"])
+	cliff.set_shader_parameter("cliff_color", Color(0.57, 0.52, 0.43).lerp(Color(0.49, 0.52, 0.48), float(index) / 5.0))
+	cliff.set_shader_parameter("tier_top", top)
 	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.mesh = mesh
+	mesh_instance.name = "TerrainSurface"
+	mesh_instance.mesh = TerrainMesh.build(radius, height, index, meadow, cliff)
 	body.add_child(mesh_instance)
 	return body
 
@@ -79,16 +81,11 @@ static func _make_tier(index: int) -> StaticBody3D:
 static func _make_sea() -> MeshInstance3D:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(1200.0, 1200.0)
-	plane.material = _flat_material(Color(0.18, 0.42, 0.70))
+	var water := ShaderMaterial.new()
+	water.shader = WaterShader
+	plane.material = water
 	var sea := MeshInstance3D.new()
 	sea.name = "Sea"
 	sea.mesh = plane
 	sea.position = Vector3(0.0, SEA_HEIGHT, 0.0)
 	return sea
-
-
-static func _flat_material(color: Color) -> StandardMaterial3D:
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color
-	material.roughness = 1.0
-	return material

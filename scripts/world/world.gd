@@ -15,6 +15,7 @@ const Loot := preload("res://scripts/hunting/loot_drop.gd")
 const BowView := preload("res://scripts/hunting/bow_view.gd")
 const HuntAudio := preload("res://scripts/hunting/hunt_audio.gd")
 const CampScenery := preload("res://scripts/world/camp_scenery.gd")
+const WorldAtmosphere := preload("res://scripts/world/world_atmosphere.gd")
 
 const PLATEAU_RADIUS := 60.0
 const OUTER_RADIUS := 90.0
@@ -299,25 +300,4 @@ func _exit_tree() -> void:
 
 
 func _add_lighting() -> void:
-	var sun := DirectionalLight3D.new()
-	sun.name = "Sun"
-	sun.rotation_degrees = Vector3(-40.0, -30.0, 0.0)
-	sun.light_color = Color("ffe6ba")
-	sun.light_energy = 1.2
-	sun.shadow_enabled = false
-	add_child(sun)
-	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color("4198b0")
-	sky_material.sky_horizon_color = Color("e6eed0")
-	sky_material.ground_horizon_color = Color("d4e2be")
-	var sky := Sky.new()
-	sky.sky_material = sky_material
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_SKY
-	environment.sky = sky
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	environment.ambient_light_energy = 0.65
-	var world_environment := WorldEnvironment.new()
-	world_environment.name = "WorldEnvironment"
-	world_environment.environment = environment
-	add_child(world_environment)
+	add_child(WorldAtmosphere.build())
