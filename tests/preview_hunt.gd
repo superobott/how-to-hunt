@@ -66,4 +66,15 @@ func _run() -> void:
 		quit(1)
 		return
 	print("Rendered expedition, wildlife and trader previews.")
+	world.get_node("HudLayer").visible = false
+	var overview := Camera3D.new()
+	world.add_child(overview)
+	overview.global_position = Vector3(100.0, 76.0, 135.0)
+	overview.look_at(Vector3(0.0, 8.0, 0.0))
+	overview.fov = 52.0
+	overview.current = true
+	for frame in 30:
+		await process_frame
+	await RenderingServer.frame_post_draw
+	result = root.get_texture().get_image().save_png("res://build/previews/island-overview.png")
 	quit(0 if result == OK else 1)

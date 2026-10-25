@@ -68,3 +68,18 @@ Host-authoritative over Steam networking, 1 to 4 players, shared island and mone
 buys a better bow and roundtrips both a full bag and upgraded gear through disk. Both test runners
 also retain the original climbing and respawn regression suite. `tests/preview_hunt.gd` is a graphical
 QA capture script and is intentionally excluded from headless CI.
+
+## Graphics pass
+`TerrainMesh` supplies level meadow caps and faceted rock faces close to the existing cylinder
+colliders. Gameplay still uses the original tier radii/heights. Procedural meadow, cliff and water
+materials use world coordinates and work in the GL Compatibility renderer.
+
+`CampScenery` batches its static props and forest by material. `MeadowDetails` builds six MultiMeshes
+for 5,190 seeded plant instances; wind runs in the vertex shader and these small plants do not cast
+shadows. Explicit white instance colors preserve vertex colors in the Compatibility renderer.
+Plant color ramps keep double-sided blades readable. The first-person bow does not cast world shadows.
+
+`WorldAtmosphere` contains a static cloud sky, warm directional sunlight using one orthographic shadow
+map, ambient fill, distance haze and distant silhouettes. Sky shaders omit `TIME`, so water/plant animation
+does not force the sky's radiance cubemap to update every frame. The project enables 2x MSAA and a
+2048-pixel directional shadow atlas. Target-hardware FPS profiling remains pending.

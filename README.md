@@ -12,6 +12,8 @@ Status: playable local hunting prototype. Steam online co-op is planned and is *
   sell your loot and buy two successive bow upgrades. Four ordinary rabbits fund the first upgrade.
 - Earn XP and hunter levels. Coins, XP, hunts, bow and carried loot save locally and reload on launch.
 - Original procedural camp, wildlife, bow, sound cues and guided expedition HUD.
+- Faceted stone cliffs, worn meadow paths, wind-animated grass and wildflowers, varied forest groves,
+  a stocked campsite, warm sunlight and shadows, painted clouds, and animated water.
 
 ## Requirements
 - [Godot 4.4.x](https://godotengine.org/download) (standard build, not .NET)

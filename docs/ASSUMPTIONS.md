@@ -12,7 +12,7 @@ Decisions made without asking, recorded so they can be revisited.
 | 6 | GodotSteam is not vendored into the repo yet. | It is a large binary addon; Steam code runs behind a fallback until it is added. | Milestone 8, or when real Steam testing starts. |
 | 7 | Cliffs are climbed by walking into them, with no stamina limit yet. | Keeps the controller simple; stamina belongs to the skill tree (milestone 6). | Skill tree work. |
 | 8 | Movement numbers (walk 5 m/s, sprint 8, jump about 1.3 m, climb 3 m/s) are untuned. | Checked numerically only; needs a human playtest. | First playtest. |
-| 9 | The island is built from code as flat-coloured placeholder cylinders. | No assets to license, easy to replace. Collision layout (tier radii and heights) must stay in sync with any authored mesh. | Visual polish, milestone 9. |
+| 9 | The island uses generated faceted terraces with cylinder colliders. | Original prototype art; level tops and cliff edges stay close to the original tier radii and heights. | Authored terrain or zone-layout work. |
 | 10 | First expedition is a local playable slice: two animals, three bows, one trader and one hunting annulus. | Establish and verify the full economy loop before expanding scope. | Co-op and zone milestones. |
 | 11 | Arrows are unlimited; bow upgrades change damage, speed and reload. | Avoid an ammunition cost that could strand a new player without income. | Weapon balance and durability work. |
 | 12 | First bow upgrade costs 48 coins; ordinary rabbits sell for 12. Bag capacity is eight. | Four successful hunts provide a visible early goal. | Human playtesting. |

@@ -43,3 +43,19 @@ The playable expedition currently uses local authority and local saves.
 policy of `Restricted`. It started the actual game in headless mode and exited successfully after two
 frames, forwarding the command-line flags. No execution-policy setting was changed. Use this launcher
 when PowerShell blocks `play.ps1`.
+
+## Graphics verification — 25 October 2026
+
+The graphics pass adds faceted layered rock, dirt trails, varied trees and campsite props, six instanced
+plant groups, shader wind, painted clouds, animated water, directional shadows and refined animal/bow/loot
+models. All content remains generated from original code. Collider dimensions and game rules stay the same.
+
+A fresh Godot import and all 178 checks passed. The original local generated editor cache stalled during
+the first import; it was preserved in `build/godot-cache-before-graphics/` and regenerated successfully.
+No player save files were changed. OpenGL previews were rendered on the Intel UHD 620 and inspected for
+readable foliage, intact wildlife/equipment, shadow placement and the trader card's viewport bounds.
+
+Baseline captures are retained locally in `build/graphics-baseline/build/previews/`. Updated captures
+include `first-expedition.png`, `wildlife.png`, `trader.png`, and `island-overview.png` in `build/previews/`.
+The richer scene increases draw calls relative to the baseline; this capture is visual QA rather than a
+controlled FPS benchmark. A stable 60 FPS on the GTX 1050-class target is still unverified.

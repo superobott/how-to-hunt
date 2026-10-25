@@ -1,4 +1,4 @@
-param([string]$Godot = $env:GODOT)
+param([string]$Godot = $env:GODOT, [string]$ProjectPath = '')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if (-not $Godot) {
@@ -6,6 +6,7 @@ if (-not $Godot) {
     if (Test-Path -LiteralPath $bundledEngine) { $Godot = $bundledEngine }
     else { $Godot = (Get-Command godot -ErrorAction Stop).Source }
 }
+if ($ProjectPath) { $projectRoot = (Resolve-Path -LiteralPath $ProjectPath).Path }
 $previewRoot = Join-Path $projectRoot 'build\previews'
 New-Item -ItemType Directory -Path $previewRoot -Force | Out-Null
 $stdoutPath = Join-Path $previewRoot 'render.stdout.log'
