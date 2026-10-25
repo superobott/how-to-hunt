@@ -29,6 +29,7 @@ var bounds: RefCounted = null
 var yaw: float = 0.0
 var pitch: float = 0.0
 var climbing: bool = false
+var controls_enabled: bool = true
 
 var _camera: Camera3D
 var _head: Node3D
@@ -50,7 +51,7 @@ func _ready() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if controls_enabled and event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion := event as InputEventMouseMotion
 		_apply_look(motion.relative * mouse_sensitivity)
 
@@ -60,6 +61,8 @@ func _physics_process(delta: float) -> void:
 		Input.get_axis(InputSetup.LOOK_LEFT, InputSetup.LOOK_RIGHT),
 		Input.get_axis(InputSetup.LOOK_UP, InputSetup.LOOK_DOWN)
 	)
+	if not controls_enabled:
+		stick_look = Vector2.ZERO
 	if stick_look != Vector2.ZERO:
 		_apply_look(stick_look * stick_look_speed * delta)
 	rotation.y = yaw
@@ -67,8 +70,10 @@ func _physics_process(delta: float) -> void:
 	var move_input := Input.get_vector(
 		InputSetup.MOVE_LEFT, InputSetup.MOVE_RIGHT, InputSetup.MOVE_BACK, InputSetup.MOVE_FORWARD
 	)
-	var jump_pressed := Input.is_action_just_pressed(InputSetup.JUMP)
-	var sprinting := Input.is_action_pressed(InputSetup.SPRINT)
+	if not controls_enabled:
+		move_input = Vector2.ZERO
+	var jump_pressed := controls_enabled and Input.is_action_just_pressed(InputSetup.JUMP)
+	var sprinting := controls_enabled and Input.is_action_pressed(InputSetup.SPRINT)
 
 	_update_climb_state(move_input, jump_pressed)
 	if climbing:
@@ -147,6 +152,7 @@ func _apply_look(look_delta: Vector2) -> void:
 	var angles := Motion.apply_look(yaw, pitch, look_delta)
 	yaw = angles.x
 	pitch = angles.y
+	rotation.y = yaw
 	if _head != null:
 		_head.rotation.x = pitch
 

@@ -43,3 +43,43 @@ A single file, `data/config/game_config.json`, holds the Steam App ID. `steam_ap
 
 ## Multiplayer (planned)
 Host-authoritative over Steam networking, 1 to 4 players, shared island and money, per-player inventory.
+
+## Playable hunting slice
+- `data/gameplay.json` defines animals, bow tiers, economy, XP thresholds, and spawn settings.
+- `HuntState` is a pure RefCounted model. A defeat grants XP; a separate pickup grants a sale item.
+  Selling consumes the inventory, and purchasing atomically checks and deducts its price.
+- `SpawnRules` owns seeded random animal/rare choices and area-uniform annulus sampling.
+- `SaveStore` validates the complete schema before mutating state, flushes a temporary JSON file,
+  preserves the previous valid main as a backup, and recovers main → backup → temporary file.
+- `world.gd` owns the local session and action entry points. It connects entity defeats to rewards,
+  validates pickup/trader proximity, debounces autosaves, and bounds wildlife replenishment.
+  This is a single-player authority, not a network transport or multiplayer implementation.
+- `scripts/hunting/` contains wildlife presentation/AI, swept physical arrows, loot presentation,
+  transient effects, the camera-local bow and original synthesized audio. Arrows start at the
+  camera and exclude their shooter's collider, so nearby cover is included in collision checks.
+- Player physics runs before weapon resolution so current look input determines each shot.
+- `MeshBatch` combines static primitive geometry by material using local transforms. Camp props
+  and each animal model retain their appearance while using fewer draw calls; colliders and lights
+  stay independent. The terrace shader gives cliff sides rock strata and keeps the walkable tops green.
+- The HUD reads session state and uses `GameText` with keyed English JSON and per-key English fallback.
+  World interactions remain outside UI code. Trading disables movement and firing.
+
+`tests/smoke_hunt.gd` loads the real scene, shoots real colliders, collects drops, sells four rabbits,
+buys a better bow and roundtrips both a full bag and upgraded gear through disk. Both test runners
+also retain the original climbing and respawn regression suite. `tests/preview_hunt.gd` is a graphical
+QA capture script and is intentionally excluded from headless CI.
+
+## Graphics pass
+`TerrainMesh` supplies level meadow caps and faceted rock faces close to the existing cylinder
+colliders. Gameplay still uses the original tier radii/heights. Procedural meadow, cliff and water
+materials use world coordinates and work in the GL Compatibility renderer.
+
+`CampScenery` batches its static props and forest by material. `MeadowDetails` builds six MultiMeshes
+for 5,190 seeded plant instances; wind runs in the vertex shader and these small plants do not cast
+shadows. Explicit white instance colors preserve vertex colors in the Compatibility renderer.
+Plant color ramps keep double-sided blades readable. The first-person bow does not cast world shadows.
+
+`WorldAtmosphere` contains a static cloud sky, warm directional sunlight using one orthographic shadow
+map, ambient fill, distance haze and distant silhouettes. Sky shaders omit `TIME`, so water/plant animation
+does not force the sky's radiance cubemap to update every frame. The project enables 2x MSAA and a
+2048-pixel directional shadow atlas. Target-hardware FPS profiling remains pending.

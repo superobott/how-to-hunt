@@ -43,5 +43,6 @@ run_suite() {
 run_suite "unit tests" -s tests/run_tests.gd
 # --fixed-fps makes every frame exactly 1/60 s, so physics is deterministic and runs fast.
 run_suite "smoke test" --fixed-fps 60 -s tests/smoke_world.gd
+run_suite "hunting loop" --fixed-fps 60 -s tests/smoke_hunt.gd
 
 exit "$overall"
