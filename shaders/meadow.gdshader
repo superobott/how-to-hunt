@@ -40,6 +40,7 @@ void fragment() {
 	vec3 earth = mix(vec3(0.47, 0.37, 0.23), vec3(0.62, 0.50, 0.32), noise(p * 0.83));
 	float pebbles = step(0.94, hash(floor(p * 10.0))) * 0.065;
 	vec3 color = mix(grass, earth + pebbles, dirt);
+	color = mix(color, vec3(0.72, 0.59, 0.37) * (0.9 + broad * 0.2), smoothstep(10.0, 24.0, p.x));
 	float rim = smoothstep(tier_radius - 0.7, tier_radius - 0.07, radial);
 	color = mix(color, vec3(0.52, 0.50, 0.34), rim * 0.61);
 	float flecks = hash(floor(p * 34.0));

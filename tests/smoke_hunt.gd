@@ -56,6 +56,7 @@ func _run() -> void:
 		_fail("world provides the player, camera, and hunting state")
 		_finish()
 		return
+	state.tool_id = "starter_bow" # The ranged regression explicitly equips a bow.
 	await _check_wall_and_reload(world, player, camera, state)
 	await _check_close_cover(world, player, camera, state)
 	await _check_same_frame_aim(world, player, camera, state)
@@ -66,11 +67,12 @@ func _run() -> void:
 			return
 	_expect(state.hunts == 4, "four actual arrow hits award four hunts")
 	_expect(state.xp == 80, "four body shots award XP once each")
-	_expect(state.inventory.size() == 4, "four collected animals remain in the bag")
-	_expect(state.coins == 0, "collected loot is not spendable before a sale")
-	_check_save_roundtrip(state, "filled bag")
+	_expect(state.inventory.is_empty(), "coin pickups never create bag loot")
+	_expect(state.coins == 48, "nearby coins become spendable without selling")
+	_check_save_roundtrip(state, "collected coins")
 	await _check_trader_and_upgrade(world, player, state)
-	_check_save_roundtrip(state, "purchased bow")
+	await _check_equipment_and_species(world, player, state)
+	_check_save_roundtrip(state, "purchased bow and equipment")
 	_finish()
 
 
@@ -177,8 +179,8 @@ func _hunt_and_collect(world: Node3D, player: CharacterBody3D, camera: Camera3D,
 	var loot := drops[0] as Area3D
 	player.global_position = loot.global_position + Vector3(0.0, 0.1, 1.0)
 	player.velocity = Vector3.ZERO
-	world.call("interact")
-	_expect(state.inventory.size() == number, "hunt %d collects loot through interaction" % number)
+	await _frames(2)
+	_expect(state.coins == number * 12, "hunt %d collects coins automatically without interaction" % number)
 	var before := state.snapshot()
 	world.call("interact")
 	_expect(state.snapshot() == before, "repeated pickup cannot duplicate the queued drop")
@@ -218,17 +220,57 @@ func _check_trader_and_upgrade(world: Node3D, player: CharacterBody3D, state: Hu
 	world.call("interact")
 	_expect(bool(world.get("shop_open")), "returning to camp allows the trader to reopen")
 	world.call("interact")
-	_expect(state.inventory.is_empty() and state.coins == 48, "trader sells four rabbits for 48 coins")
+	_expect(state.inventory.is_empty() and state.coins == 48, "opening the store preserves the 48 collected coins")
 	world.call("interact")
 	_expect(state.coins == 48, "repeating an empty sale cannot duplicate money")
 	var old_damage := float(state.tool()["damage"])
-	_expect(bool(world.call("buy_upgrade")), "earned coins buy the first bow upgrade")
+	state.coins = int(state.next_tool()["price"])
+	var button: Button = world.get_node("HudLayer/Hud").get("_buy_buttons")["hunters_bow"]
+	button.pressed.emit()
+	_expect(state.tool_id == "hunters_bow", "store button buys the selected bow")
 	_expect(state.tool_id == "hunters_bow" and float(state.tool()["damage"]) > old_damage,
 		"the purchased bow increases real weapon damage")
 	_expect(state.coins == 0, "buying the first upgrade deducts its full price")
 	_expect(not bool(world.call("buy_upgrade")), "an unaffordable next upgrade is rejected")
 	_expect(state.tool_id == "hunters_bow" and state.coins == 0,
 		"a rejected purchase preserves the equipped bow and money")
+
+
+func _check_equipment_and_species(world: Node3D, player: CharacterBody3D, state: HuntState) -> void:
+	state.coins = 1000000
+	for id in state.catalog["gear"]:
+		_expect(world.buy_item(id), "buy equipment: " + id)
+	await _frames(3)
+	_expect(is_equal_approx(player.speed_multiplier, 1.2), "boots affect actual player speed")
+	_expect(is_equal_approx(player.jump_multiplier, 1.12), "mountain boots affect jump")
+	world._close_shop()
+	for id in state.catalog["animals"]:
+		player.position = Vector3(0, 24.1, 3)
+		player.velocity = Vector3.ZERO
+		var animal := Animal.new()
+		animal.animal_id = id
+		animal.definition = state.animal(id)
+		animal.inner_radius = 17
+		animal.outer_radius = 78
+		animal.position = Vector3(30, 10.7, 0)
+		animal.home = animal.position
+		animal.defeated.connect(Callable(world, "_on_animal_defeated"))
+		world.add_child(animal)
+		await _frames(15)
+		_expect(animal.position.y > 9, id + " remains on the mountain slope")
+		var before := state.hunts
+		animal.take_hit(1000, animal.global_position, player.global_position)
+		await _frames(2)
+		_expect(state.hunts == before + 1, id + " awards one hunt")
+		var drops := get_nodes_in_group("hunt_loot")
+		_expect(drops.size() == 1, id + " drops coins")
+		if not drops.is_empty():
+			var coin: Node3D = drops[0]
+			_expect(coin.position.y > 9, id + " coins stay above sloping terrain")
+			player.position = coin.position + Vector3(0, 0.2, 3.0)
+			player.velocity = Vector3.ZERO
+			await _frames(2)
+			_expect(get_nodes_in_group("hunt_loot").is_empty(), "magnet collects " + id + " coins from three metres")
 
 
 func _spawn_rabbit(world: Node3D, state: HuntState) -> CharacterBody3D:

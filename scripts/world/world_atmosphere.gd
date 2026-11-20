@@ -44,18 +44,18 @@ static func build() -> Node3D:
 	world_environment.name = "WorldEnvironment"
 	world_environment.environment = environment
 	atmosphere.add_child(world_environment)
-	_add_distant_islands(atmosphere)
+	_add_distant_mountains(atmosphere)
 	return atmosphere
 
 
-static func _add_distant_islands(parent: Node3D) -> void:
+static func _add_distant_mountains(parent: Node3D) -> void:
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color("688c91")
+	material.albedo_color = Color("938d7c")
 	material.roughness = 1.0
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	for index in 5:
-		var angle := 0.8 + float(index) * 1.25
-		var center := Vector3(cos(angle) * 420.0, -7.0, sin(angle) * 420.0)
+	for index in 18:
+		var angle := 0.8 + float(index) * TAU / 18.0
+		var center := Vector3(cos(angle) * 300.0, -8.0, sin(angle) * 300.0)
 		for peak in 2:
 			var mesh := CylinderMesh.new()
 			mesh.top_radius = 0.0

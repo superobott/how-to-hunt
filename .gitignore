@@ -8,6 +8,7 @@ data_*/
 
 # Builds and SteamPipe output
 build/
+tmp/
 steam/output/
 steam/content/
 *.exe

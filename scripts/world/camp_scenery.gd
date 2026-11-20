@@ -13,6 +13,7 @@ static func build() -> Node3D:
 	scenery.name = "CampScenery"
 	var materials := _palette()
 	_trader(scenery, materials)
+	_caves(scenery, materials)
 	_campfire(scenery, materials)
 	_tent(scenery, materials)
 	_crate(scenery, Vector3(10.6, 0.0, 49.2), materials)
@@ -23,7 +24,7 @@ static func build() -> Node3D:
 	_sign(scenery, materials)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 729401
-	var bands := [[45.5, 56.0, 20], [29.5, 38.0, 17], [16.0, 22.5, 11], [5.0, 9.0, 3]]
+	var bands := [[46.0, 82.0, 48], [29.5, 40.0, 24], [17.0, 25.0, 14], [5.0, 9.0, 0]]
 	for band_index in bands.size():
 		var band: Array = bands[band_index]
 		for index in int(band[2]):
@@ -76,78 +77,86 @@ static func _palette() -> Dictionary:
 
 
 static func _trader(parent: Node3D, mat: Dictionary) -> void:
-	var stall := Node3D.new()
-	stall.name = "TraderCamp"
-	stall.position = Vector3(8.0, 0.0, 50.0)
-	stall.rotation.y = atan2(8.0, -2.0)
-	parent.add_child(stall)
-	# Plank platform, counter and pegged timber frame.
-	for index in 9:
-		_box(stall, Vector3(-1.4 + index * 0.35, 0.045, 0.0), Vector3(0.33, 0.09, 2.4), mat["plank"])
+	var store := Node3D.new()
+	store.name = "BjornsStore"
+	store.position = Vector3(0, 24, -6)
+	parent.add_child(store)
+	# Open-front timber longhouse; the entrance faces the summit spawn.
 	for side in [-1.0, 1.0]:
-		for depth in [-1.0, 1.0]:
-			_box(stall, Vector3(side * 1.4, 1.45, depth * 0.85), Vector3(0.13, 2.9, 0.13), mat["wood"])
-		_box(stall, Vector3(side * 1.4, 2.82, 0.0), Vector3(0.16, 0.16, 2.9), mat["wood"])
-		_beam(stall, Vector3(side * 1.4, 2.1, -0.85), Vector3(side * 0.95, 2.75, -0.85), 0.055, mat["wood"], 5)
-		_beam(stall, Vector3(side * 1.4, 2.75, 0.9), Vector3(side * 2.0, 0.12, 1.8), 0.018, mat["rope"], 5)
-		_box(stall, Vector3(side * 2.0, 0.11, 1.8), Vector3(0.07, 0.22, 0.07), mat["wood"])
-	_box(stall, Vector3(0.0, 1.12, -0.76), Vector3(3.1, 0.16, 0.8), mat["plank"])
-	_box(stall, Vector3(0.0, 0.6, -1.1), Vector3(2.9, 0.96, 0.10), mat["wood"])
-	for index in 8:
-		_box(stall, Vector3(-1.25 + index * 0.36, 0.61, -1.17), Vector3(0.33, 0.85, 0.07), mat["plank"])
-	for height in [0.23, 0.98]:
-		_box(stall, Vector3(0.0, height, -1.22), Vector3(2.95, 0.09, 0.06), mat["wood_end"])
-	# Cloth sags from the ridge; rounded tabs give the valance a scalloped edge.
-	var profile := [Vector2(-1.5, 2.62), Vector2(-0.75, 2.90), Vector2(0.10, 3.13), Vector2(0.8, 2.91), Vector2(1.35, 2.78)]
-	for stripe in 8:
-		var x := -1.4 + stripe * 0.4
-		var material: Material = mat["amber" if stripe % 2 == 0 else "cream"]
-		for segment in profile.size() - 1:
-			var a: Vector2 = profile[segment]
-			var b: Vector2 = profile[segment + 1]
-			var cloth := _box(stall, Vector3(x, (a.y + b.y) * 0.5, (a.x + b.x) * 0.5), Vector3(0.405, 0.025, a.distance_to(b)), material)
-			cloth.rotation.x = -atan2(b.y - a.y, b.x - a.x)
-		_box(stall, Vector3(x, 2.52, -1.5), Vector3(0.4, 0.20, 0.035), material)
-		_sphere(stall, Vector3(x, 2.43, -1.5), Vector3(0.2, 0.13, 0.022), material)
-	_beam(stall, Vector3(-1.6, 3.13, 0.1), Vector3(1.6, 3.13, 0.1), 0.045, mat["wood"], 6)
+		var wall := _box(store, Vector3(side * 4, 1.9, 0), Vector3(0.3, 3.8, 6), mat["wood"])
+		wall.create_trimesh_collision()
+		for z in [-2.8, 0.0, 2.8]:
+			_box(store, Vector3(side * 3.8, 2, z), Vector3(0.28, 4, 0.28), mat["wood_end"])
+		var roof := _box(store, Vector3(side * 2.1, 4.3, 0), Vector3(4.8, 0.22, 7.2), mat["pine"])
+		roof.rotation.z = side * -0.23
+	var back := _box(store, Vector3(0, 1.9, -3), Vector3(8, 3.8, 0.3), mat["plank"])
+	back.create_trimesh_collision()
+	_box(store, Vector3(0, 3.6, 3.1), Vector3(7.8, 0.65, 0.25), mat["wood"])
+	_label(store, "BJORN'S OUTFITTERS", Vector3(0, 3.65, 3.3), 0.012)
+	var counter := _box(store, Vector3(0, 0.65, -0.7), Vector3(5.6, 1.3, 0.8), mat["plank"])
+	counter.create_trimesh_collision()
+	_box(store, Vector3(0, 1.34, -0.7), Vector3(5.9, 0.15, 1.0), mat["wood_end"])
+	var merchant := Node3D.new()
+	merchant.position = Vector3(0, 0, -1.8)
+	merchant.rotation.y = PI
+	store.add_child(merchant)
+	_merchant(merchant, mat)
+	for index in 3:
+		var x := -2.6 + index * 2.6
+		# Three displayed bows match the complete store catalog.
+		var shade: Material = mat[["wood_end", "amber", "iron"][index]]
+		for segment in 8:
+			var t := -1.2 + segment * 0.3
+			var u := t + 0.3
+			_beam(store, Vector3(x + cos(t) * 0.35, 2.2 + sin(t) * 0.75, -2.78), Vector3(x + cos(u) * 0.35, 2.2 + sin(u) * 0.75, -2.78), 0.035, shade, 6)
+		_beam(store, Vector3(x + 0.127, 1.5, -2.78), Vector3(x + 0.127, 2.9, -2.78), 0.009, mat["rope"], 5)
 	for side in [-1.0, 1.0]:
-		_beam(stall, Vector3(side * 0.7, 2.65, -1.48), Vector3(side * 0.7, 2.2, -1.48), 0.015, mat["rope"], 5)
-	_box(stall, Vector3(0.0, 2.25, -1.5), Vector3(1.8, 0.30, 0.07), mat["wood"])
-	_label(stall, GameText.get_text("world.trader"), Vector3(0.0, 3.56, -0.2), 0.012)
-	_merchant(stall, mat)
-	for index in 3:
-		var x := -0.95 + index * 0.83
-		_box(stall, Vector3(x, 1.25, -0.78), Vector3(0.62, 0.10, 0.38), mat["wood"])
-		for item in 3:
-			_sphere(stall, Vector3(x - 0.17 + item * 0.17, 1.37, -0.78), Vector3(0.09, 0.12, 0.10), mat["berry" if index == 0 else "amber"])
-	# Rolled maps, a weighing pan and an arrow rack make the wares readable.
-	for index in 3:
-		var scroll := _cylinder(stall, Vector3(0.9 + index * 0.12, 1.3, -0.4), 0.04, 0.04, 0.4, mat["cream"], 6)
-		scroll.rotation.z = PI * 0.5
-	_box(stall, Vector3(1.27, 1.26, -0.7), Vector3(0.07, 0.12, 0.06), mat["iron"])
-	_cylinder(stall, Vector3(1.27, 1.34, -0.7), 0.16, 0.1, 0.04, mat["iron"], 10)
-	_box(stall, Vector3(-1.7, 0.8, 0.3), Vector3(0.13, 1.55, 0.13), mat["wood"])
-	_box(stall, Vector3(-1.7, 1.42, 0.3), Vector3(0.65, 0.1, 0.1), mat["wood"])
-	for index in 4:
-		_beam(stall, Vector3(-1.9 + index * 0.12, 0.2, 0.32), Vector3(-1.8 + index * 0.12, 1.6, 0.32), 0.015, mat["wood_end"], 5)
-	_lantern(stall, Vector3(1.43, 2.12, -1.02), mat)
-	_crate(stall, Vector3(0.65, 0.1, 0.6), mat, 0.65)
+		_lantern(store, Vector3(side * 3.7, 2.8, 2.8), mat)
+		_crate(store, Vector3(side * 3, 0, 0.6), mat)
 
 
 static func _merchant(parent: Node3D, mat: Dictionary) -> void:
-	_sphere(parent, Vector3(0.0, 1.14, 0.25), Vector3(0.39, 0.51, 0.26), mat["pine"])
-	_box(parent, Vector3(0.0, 1.1, -0.01), Vector3(0.43, 0.60, 0.06), mat["canvas"])
-	_sphere(parent, Vector3(0.0, 1.80, 0.18), Vector3(0.29, 0.32, 0.28), mat["skin"])
-	_sphere(parent, Vector3(0.0, 1.63, -0.025), Vector3(0.25, 0.23, 0.12), mat["cream"])
+	# Broad shoulders, bare muscular arms, fur collar, braided beard and iron helmet.
+	_sphere(parent, Vector3(0, 1.35, 0), Vector3(0.58, 0.7, 0.32), mat["wood"])
+	_box(parent, Vector3(0, 1.08, -0.30), Vector3(1.05, 0.13, 0.10), mat["iron"])
 	for side in [-1.0, 1.0]:
-		_sphere(parent, Vector3(side * 0.105, 1.86, -0.078), Vector3(0.035, 0.045, 0.025), mat["dark"])
-		var arm := _sphere(parent, Vector3(side * 0.42, 1.32, 0.18), Vector3(0.13, 0.36, 0.13), mat["pine"])
-		arm.rotation.z = side * -0.30
-		_sphere(parent, Vector3(side * 0.49, 1.05, 0.10), Vector3(0.13, 0.13, 0.13), mat["skin"])
-	_sphere(parent, Vector3(0.0, 1.75, -0.13), Vector3(0.065, 0.075, 0.075), mat["skin"])
-	_cylinder(parent, Vector3(0.0, 2.05, 0.18), 0.42, 0.42, 0.08, mat["amber"], 8)
-	_cylinder(parent, Vector3(0.0, 2.2, 0.18), 0.20, 0.28, 0.26, mat["pine"], 8)
-	_box(parent, Vector3(0.0, 2.15, 0.18), Vector3(0.54, 0.07, 0.48), mat["wood"])
+		_box(parent, Vector3(side * 0.27, 0.45, 0), Vector3(0.34, 0.9, 0.4), mat["dark"])
+		_sphere(parent, Vector3(side * 0.62, 1.73, 0), Vector3(0.30, 0.28, 0.32), mat["rock_light"])
+		_sphere(parent, Vector3(side * 0.68, 1.38, -0.05), Vector3(0.23, 0.4, 0.23), mat["skin"])
+		_box(parent, Vector3(side * 0.7, 1.08, -0.07), Vector3(0.35, 0.22, 0.35), mat["iron"])
+		_sphere(parent, Vector3(side * 0.7, 0.94, -0.10), Vector3(0.19, 0.2, 0.19), mat["skin"])
+	_sphere(parent, Vector3(0, 2.18, 0), Vector3(0.32, 0.36, 0.30), mat["skin"])
+	_sphere(parent, Vector3(0, 1.98, -0.23), Vector3(0.29, 0.28, 0.15), mat["canvas"])
+	for side in [-1.0, 1.0]:
+		for segment in 3:
+			_sphere(parent, Vector3(side * 0.14, 1.85 - segment * 0.11, -0.26), Vector3(0.08, 0.10, 0.075), mat["canvas"])
+		_sphere(parent, Vector3(side * 0.12, 2.24, -0.28), Vector3(0.035, 0.035, 0.025), mat["dark"])
+		_box(parent, Vector3(side * 0.12, 2.31, -0.28), Vector3(0.15, 0.04, 0.04), mat["canvas"])
+	_sphere(parent, Vector3(0, 2.16, -0.32), Vector3(0.07, 0.08, 0.09), mat["skin"])
+	_sphere(parent, Vector3(0, 2.43, 0), Vector3(0.34, 0.23, 0.32), mat["iron"])
+	_box(parent, Vector3(0, 2.36, -0.31), Vector3(0.07, 0.28, 0.05), mat["iron"])
+
+
+static func _caves(parent: Node3D, mat: Dictionary) -> void:
+	for location in [Vector3(24, 0, 46), Vector3(-47, 0, -14)]:
+		var cave := Node3D.new()
+		cave.name = "RockCave"
+		cave.position = location
+		parent.add_child(cave)
+		# Hollow, walkable rock shelters: side walls and roof leave a real entrance.
+		for side in [-1.0, 1.0]:
+			var wall := _box(cave, Vector3(side * 2.5, 1.8, 0), Vector3(1.5, 3.6, 7), mat["rock"])
+			wall.create_trimesh_collision()
+		var roof := _box(cave, Vector3(0, 3.7, 0), Vector3(6.5, 1.2, 7.5), mat["rock_light"])
+		roof.create_trimesh_collision()
+		var back := _box(cave, Vector3(0, 1.8, -3.5), Vector3(6, 3.6, 1), mat["rock"])
+		back.create_trimesh_collision()
+		for side in [-1.0, 1.0]:
+			_sphere(cave, Vector3(side * 2.8, 2.0, 2.2), Vector3(1.6, 2.5, 1.7), mat["rock"])
+		for index in 6:
+			var rock := _sphere(cave, Vector3(-2.6 + index * 1.05, 4.1, 0.2), Vector3(1.3, 0.95, 3.8), mat["rock_light" if index % 2 == 0 else "rock"])
+			rock.rotation.z = (index % 3 - 1) * 0.13
+		_label(cave, "ROCK CAVE", Vector3(0, 4.6, 3.5), 0.009)
 
 
 static func _tent(parent: Node3D, mat: Dictionary) -> void:
@@ -328,7 +337,7 @@ static func _position(rng: RandomNumberGenerator, inner: float, outer: float) ->
 		var angle := rng.randf_range(0.0, TAU)
 		var radius := rng.randf_range(inner, outer)
 		var at := Vector3(cos(angle) * radius, IslandBuilder.ground_height_at(radius), sin(angle) * radius)
-		if absf(at.x) < 6.0 or at.distance_to(Vector3(8.0, 0.0, 50.0)) < 7.0:
+		if at.x > 15.0 or absf(at.x) < 6.0 or at.distance_to(Vector3(8.0, 0.0, 50.0)) < 7.0:
 			continue
 		if at.distance_to(Vector3(-7.0, 0.0, 51.0)) < 5.0 or at.distance_to(Vector3(3.9, 0.0, 54.3)) < 4.0:
 			continue

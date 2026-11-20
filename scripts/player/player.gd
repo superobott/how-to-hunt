@@ -30,6 +30,21 @@ var yaw: float = 0.0
 var pitch: float = 0.0
 var climbing: bool = false
 var controls_enabled: bool = true
+var remote_controlled := false
+var network_view_only := false
+var network_input: Dictionary = {}
+var speed_multiplier: float = 1.0
+var jump_multiplier: float = 1.0
+var third_person := false
+var _avatar: MeshInstance3D
+
+var vehicle_id := ""
+var vehicle_speed := 0.0
+var vehicle_model: Node3D
+
+var stamina: float = 100.0
+var guarding: bool = false
+var sprint_exhausted: bool = false
 
 var _camera: Camera3D
 var _head: Node3D
@@ -46,11 +61,15 @@ var _wall_point: Vector3 = Vector3.ZERO
 func _ready() -> void:
 	InputSetup.ensure_actions()
 	_build_nodes()
-	floor_snap_length = 0.4
+	floor_snap_length = 0.65
+	floor_constant_speed = true
+	floor_max_angle = deg_to_rad(46.0)
 	floor_stop_on_slope = true
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if remote_controlled:
+		return
 	if controls_enabled and event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		var motion := event as InputEventMouseMotion
 		_apply_look(motion.relative * mouse_sensitivity)
@@ -61,20 +80,58 @@ func _physics_process(delta: float) -> void:
 		Input.get_axis(InputSetup.LOOK_LEFT, InputSetup.LOOK_RIGHT),
 		Input.get_axis(InputSetup.LOOK_UP, InputSetup.LOOK_DOWN)
 	)
+	if remote_controlled:
+		stick_look = Vector2.ZERO
+		yaw = float(network_input.get("yaw", yaw))
+		pitch = float(network_input.get("pitch", pitch))
+		_head.rotation.x = pitch
 	if not controls_enabled:
 		stick_look = Vector2.ZERO
 	if stick_look != Vector2.ZERO:
 		_apply_look(stick_look * stick_look_speed * delta)
 	rotation.y = yaw
+	if network_view_only:
+		return # Guest movement/stamina come from the host; local look stays responsive.
 
 	var move_input := Input.get_vector(
 		InputSetup.MOVE_LEFT, InputSetup.MOVE_RIGHT, InputSetup.MOVE_BACK, InputSetup.MOVE_FORWARD
 	)
+	if remote_controlled:
+		move_input = network_input.get("move", Vector2.ZERO)
 	if not controls_enabled:
 		move_input = Vector2.ZERO
-	var jump_pressed := controls_enabled and Input.is_action_just_pressed(InputSetup.JUMP)
-	var sprinting := controls_enabled and Input.is_action_pressed(InputSetup.SPRINT)
+	var jump_pressed := controls_enabled and stamina >= 12.0 and (bool(network_input.get("jump", false)) if remote_controlled else Input.is_action_just_pressed(InputSetup.JUMP))
+	if remote_controlled:
+		network_input["jump"] = false
+	if stamina <= 5.0:
+		sprint_exhausted = true
+	elif stamina >= 30.0:
+		sprint_exhausted = false
+	var sprinting := controls_enabled and not guarding and not sprint_exhausted and stamina > 5.0 and (bool(network_input.get("sprint", false)) if remote_controlled else Input.is_action_pressed(InputSetup.SPRINT)) and move_input.length() > 0.1
+	if sprinting:
+		stamina = maxf(0.0, stamina - delta * 22.0)
+	else:
+		stamina = minf(100.0, stamina + delta * (10.0 if guarding else 26.0))
+	if jump_pressed and is_on_floor():
+		stamina = maxf(0.0, stamina - 12.0)
 
+	if not vehicle_id.is_empty():
+		climbing = false
+		var wish := Motion.wish_direction(move_input, yaw)
+		velocity.x = move_toward(velocity.x, wish.x * vehicle_speed, delta * 16)
+		velocity.z = move_toward(velocity.z, wish.z * vehicle_speed, delta * 16)
+		if vehicle_id == "airplane":
+			var lift := 0.0
+			if controls_enabled:
+				lift = float(Input.is_physical_key_pressed(KEY_SPACE)) - float(Input.is_physical_key_pressed(KEY_CTRL))
+				if remote_controlled:
+					lift = float(network_input.get("lift", 0.0))
+			velocity.y = lift * 12.0
+		else:
+			velocity.y = Motion.step_vertical(velocity.y, is_on_floor(), false, delta)
+		move_and_slide()
+		_enforce_bounds()
+		return
 	_update_climb_state(move_input, jump_pressed)
 	if climbing:
 		velocity = Motion.climb_velocity(move_input.y)
@@ -85,6 +142,7 @@ func _physics_process(delta: float) -> void:
 
 
 func respawn() -> void:
+	set_vehicle("")
 	if bounds != null:
 		global_position = bounds.respawn_position()
 	velocity = Vector3.ZERO
@@ -95,8 +153,10 @@ func respawn() -> void:
 func _step_walking(move_input: Vector2, jump_pressed: bool, sprinting: bool, delta: float) -> void:
 	var wish := Motion.wish_direction(move_input, yaw)
 	var on_floor := is_on_floor()
-	velocity = Motion.step_horizontal(velocity, wish, Motion.target_speed(sprinting), on_floor, delta)
+	velocity = Motion.step_horizontal(velocity, wish, Motion.target_speed(sprinting) * speed_multiplier * (0.65 if guarding else 1.0), on_floor, delta)
 	velocity.y = Motion.step_vertical(velocity.y, on_floor, jump_pressed, delta)
+	if on_floor and jump_pressed:
+		velocity.y *= jump_multiplier
 
 
 ## Decides whether to grab, keep or let go of a climbable wall. Letting go can launch the player:
@@ -170,6 +230,28 @@ func _build_nodes() -> void:
 	collider.position = Vector3(0.0, CAPSULE_HEIGHT / 2.0, 0.0)
 	add_child(collider)
 
+	_avatar = MeshInstance3D.new()
+	var avatar_mesh := CapsuleMesh.new()
+	avatar_mesh.radius = 0.3
+	avatar_mesh.height = 0.8
+	_avatar.mesh = avatar_mesh
+	_avatar.position.y = 1.05
+	var coat := StandardMaterial3D.new()
+	coat.albedo_color = Color("538477")
+	_avatar.material_override = coat
+	_avatar.visible = remote_controlled
+	add_child(_avatar)
+	for part in [Vector3(0, 0.6, 0), Vector3(-0.16, -0.65, 0), Vector3(0.16, -0.65, 0), Vector3(-0.42, -0.05, 0), Vector3(0.42, -0.05, 0)]:
+		var limb := MeshInstance3D.new()
+		var shape := CapsuleMesh.new()
+		shape.radius = 0.2 if part.y > 0 else 0.12
+		shape.height = 0.4 if part.y > 0 else 0.65
+		limb.mesh = shape
+		limb.position = part
+		var fabric := StandardMaterial3D.new()
+		fabric.albedo_color = Color("d4ae87") if part.y > 0 else Color("384c40")
+		limb.material_override = fabric
+		_avatar.add_child(limb)
 	_head = Node3D.new()
 	_head.name = "Head"
 	_head.position = Vector3(0.0, EYE_HEIGHT, 0.0)
@@ -177,7 +259,7 @@ func _build_nodes() -> void:
 
 	_camera = Camera3D.new()
 	_camera.name = "Camera"
-	_camera.current = true
+	_camera.current = not remote_controlled
 	_camera.fov = 75.0
 	_head.add_child(_camera)
 
@@ -193,3 +275,67 @@ func _build_nodes() -> void:
 	_ledge_ray.target_position = Vector3(0.0, -LEDGE_RAY_DROP, 0.0)
 	_ledge_ray.collide_with_areas = false
 	add_child(_ledge_ray)
+
+
+func set_vehicle(id: String, speed: float = 0.0) -> void:
+	vehicle_id = id
+	vehicle_speed = speed
+	velocity = Vector3.ZERO
+	climbing = false
+	if is_instance_valid(vehicle_model):
+		vehicle_model.queue_free()
+	if id.is_empty():
+		return
+	vehicle_model = Node3D.new()
+	add_child(vehicle_model)
+	var body := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.3 if id == "bike" else 1.5, 0.4, 2.4)
+	body.mesh = box
+	body.position = Vector3(0, 0.7, -0.8)
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color("d99843")
+	body.material_override = material
+	vehicle_model.add_child(body)
+	if id == "airplane":
+		var wings := MeshInstance3D.new()
+		var wing_mesh := BoxMesh.new()
+		wing_mesh.size = Vector3(6, 0.12, 0.8)
+		wings.mesh = wing_mesh
+		wings.position = Vector3(0, 0.7, -0.8)
+		wings.material_override = material
+		vehicle_model.add_child(wings)
+	else:
+		for z in [-1.6, 0.2]:
+			for x in ([0.0] if id == "bike" else [-0.8, 0.8]):
+				var wheel := MeshInstance3D.new()
+				var tire := CylinderMesh.new()
+				tire.top_radius = 0.35
+				tire.bottom_radius = 0.35
+				tire.height = 0.18
+				wheel.mesh = tire
+				wheel.rotation.z = PI / 2
+				wheel.position = Vector3(x, 0.35, z)
+				vehicle_model.add_child(wheel)
+
+
+func toggle_camera() -> void:
+	third_person = not third_person
+	_avatar.visible = third_person
+	_update_camera()
+
+func _process(_delta: float) -> void:
+	_update_camera()
+
+func _update_camera() -> void:
+	if _camera == null or remote_controlled:
+		return
+	if not third_person:
+		_camera.position = Vector3.ZERO
+		return
+	var origin := _head.global_position
+	var desired := _head.to_global(Vector3(0, 0.6, 4.0))
+	var query := PhysicsRayQueryParameters3D.create(origin, desired)
+	query.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	_camera.global_position = desired if hit.is_empty() else hit.position + hit.normal * 0.25

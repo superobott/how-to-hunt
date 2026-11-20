@@ -19,12 +19,12 @@ func test_spawn_positions_stay_on_outer_plateau_and_use_height() -> void:
 		var position := rules.next_position(2.5)
 		var radius := Vector2(position.x, position.z).length()
 		assert_true(position.is_finite())
-		assert_true(radius >= 44.0 - 0.0001 and radius <= 56.0 + 0.0001, "annulus radius")
+		assert_true(radius >= 17.0 - 0.0001 and radius <= 78.0 + 0.0001, "annulus radius")
 		assert_near(position.y, 2.5)
 		average_squared_radius += radius * radius
 	average_squared_radius /= 1000.0
-	assert_near(average_squared_radius, (44.0 * 44.0 + 56.0 * 56.0) / 2.0,
-		"annulus is distributed by area", 45.0)
+	assert_near(average_squared_radius, (17.0 * 17.0 + 78.0 * 78.0) / 2.0,
+		"annulus is distributed by area", 150.0)
 
 
 func test_configured_annulus_and_eligible_animals() -> void:

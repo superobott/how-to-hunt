@@ -7,51 +7,300 @@
       "xp": 20,
       "value": 12,
       "rare_chance": 0.12,
-      "rare_multiplier": 3.0,
+      "rare_multiplier": 3,
       "behavior": "flee",
-      "body_color": [0.75, 0.65, 0.5],
+      "body_color": [
+        0.75,
+        0.65,
+        0.5
+      ],
       "radius": 0.48
     },
     "boar": {
       "name_key": "animal.boar",
       "hp": 70,
-      "speed": 3.0,
+      "speed": 3,
       "xp": 45,
       "value": 30,
       "rare_chance": 0.08,
-      "rare_multiplier": 3.0,
+      "rare_multiplier": 3,
+      "behavior": "hostile",
+      "body_color": [
+        0.39,
+        0.25,
+        0.2
+      ],
+      "radius": 0.85,
+      "attack_damage": 14,
+      "aggro_range": 7,
+      "attack_windup": 0.7
+    },
+    "deer": {
+      "name_key": "animal.deer",
+      "hp": 90,
+      "speed": 4.8,
+      "xp": 65,
+      "value": 45,
+      "radius": 0.65,
+      "body_color": [
+        0.56,
+        0.34,
+        0.17
+      ],
+      "behavior": "flee",
+      "rare_chance": 0.08,
+      "rare_multiplier": 3
+    },
+    "fox": {
+      "name_key": "animal.fox",
+      "hp": 45,
+      "speed": 5.2,
+      "xp": 35,
+      "value": 25,
+      "radius": 0.42,
+      "body_color": [
+        0.79,
+        0.34,
+        0.13
+      ],
+      "behavior": "flee",
+      "rare_chance": 0.08,
+      "rare_multiplier": 3
+    },
+    "goat": {
+      "name_key": "animal.goat",
+      "hp": 65,
+      "speed": 3.8,
+      "xp": 45,
+      "value": 32,
+      "radius": 0.55,
+      "body_color": [
+        0.66,
+        0.64,
+        0.56
+      ],
       "behavior": "roam",
-      "body_color": [0.39, 0.25, 0.2],
-      "radius": 0.85
+      "rare_chance": 0.08,
+      "rare_multiplier": 3
+    },
+    "wolf": {
+      "name_key": "animal.wolf",
+      "hp": 110,
+      "speed": 4.5,
+      "xp": 80,
+      "value": 60,
+      "radius": 0.62,
+      "body_color": [
+        0.4,
+        0.45,
+        0.48
+      ],
+      "behavior": "hostile",
+      "rare_chance": 0.08,
+      "rare_multiplier": 3,
+      "attack_damage": 18,
+      "aggro_range": 11,
+      "attack_windup": 0.7
+    },
+    "bear": {
+      "name_key": "animal.bear",
+      "hp": 240,
+      "speed": 2.5,
+      "xp": 140,
+      "value": 110,
+      "radius": 1,
+      "body_color": [
+        0.32,
+        0.23,
+        0.16
+      ],
+      "behavior": "hostile",
+      "rare_chance": 0.08,
+      "rare_multiplier": 3,
+      "attack_damage": 28,
+      "aggro_range": 9,
+      "attack_windup": 0.9
+    },
+    "ant": {
+      "name_key": "animal.ant",
+      "hp": 10,
+      "speed": 1.5,
+      "xp": 6,
+      "value": 3,
+      "rare_chance": 0.05,
+      "rare_multiplier": 3,
+      "behavior": "roam",
+      "body_color": [
+        0.25,
+        0.12,
+        0.07
+      ],
+      "radius": 0.17
+    },
+    "bird": {
+      "name_key": "animal.bird",
+      "hp": 18,
+      "speed": 2.4,
+      "xp": 25,
+      "value": 10,
+      "rare_chance": 0.08,
+      "rare_multiplier": 3,
+      "behavior": "flee",
+      "body_color": [
+        0.18,
+        0.42,
+        0.56
+      ],
+      "radius": 0.28
     }
   },
   "tools": {
+    "knife": {
+      "name_key": "tool.knife",
+      "kind": "melee",
+      "damage": 18,
+      "range": 2.5,
+      "speed": 0,
+      "reload": 0.55,
+      "price": 0,
+      "next": "starter_bow"
+    },
     "starter_bow": {
       "name_key": "tool.starter_bow",
       "damage": 25,
-      "speed": 60.0,
+      "speed": 60,
       "reload": 0.9,
-      "price": 0,
-      "next": "hunters_bow"
+      "price": 120,
+      "next": "hunters_bow",
+      "kind": "bow"
     },
     "hunters_bow": {
       "name_key": "tool.hunters_bow",
       "damage": 45,
-      "speed": 85.0,
+      "speed": 85,
       "reload": 0.65,
-      "price": 48,
-      "next": "mountain_bow"
+      "price": 240,
+      "next": "mountain_bow",
+      "kind": "bow"
     },
     "mountain_bow": {
       "name_key": "tool.mountain_bow",
       "damage": 75,
-      "speed": 110.0,
+      "speed": 110,
       "reload": 0.45,
-      "price": 240,
-      "next": ""
+      "price": 1200,
+      "next": "longbow",
+      "kind": "bow"
+    },
+    "longbow": {
+      "name_key": "tool.longbow",
+      "price": 2100,
+      "damage": 95,
+      "speed": 125,
+      "reload": 0.65,
+      "next": "recurve_bow",
+      "kind": "bow"
+    },
+    "recurve_bow": {
+      "name_key": "tool.recurve_bow",
+      "price": 3500,
+      "damage": 110,
+      "speed": 140,
+      "reload": 0.38,
+      "next": "frost_bow",
+      "kind": "bow"
+    },
+    "frost_bow": {
+      "name_key": "tool.frost_bow",
+      "price": 5500,
+      "damage": 145,
+      "speed": 155,
+      "reload": 0.34,
+      "next": "viking_bow",
+      "kind": "bow"
+    },
+    "viking_bow": {
+      "name_key": "tool.viking_bow",
+      "price": 9000,
+      "damage": 190,
+      "speed": 175,
+      "reload": 0.3,
+      "next": "",
+      "kind": "bow"
     }
   },
-  "economy": {"capacity": 8, "trick_multiplier": 1.5},
-  "progression": {"xp_per_level": 100},
-  "spawn": {"count": 10, "inner_radius": 44.0, "outer_radius": 56.0, "respawn_seconds": 12.0}
+  "economy": {
+    "capacity": 8,
+    "trick_multiplier": 1.5
+  },
+  "progression": {
+    "xp_per_level": 100
+  },
+  "spawn": {
+    "count": 42,
+    "inner_radius": 17,
+    "outer_radius": 78,
+    "respawn_seconds": 5
+  },
+  "gear": {
+    "trail_boots": {
+      "name_key": "gear.trail_boots",
+      "price": 90,
+      "description": "Walk and sprint 20% faster.",
+      "effect": "speed",
+      "multiplier": 1.2
+    },
+    "coin_magnet": {
+      "name_key": "gear.coin_magnet",
+      "price": 150,
+      "description": "Collect nearby coins from 4 metres away.",
+      "effect": "pickup",
+      "multiplier": 4
+    },
+    "archer_gloves": {
+      "name_key": "gear.archer_gloves",
+      "price": 220,
+      "description": "Nock every arrow 20% faster.",
+      "effect": "reload",
+      "multiplier": 0.8
+    },
+    "mountain_boots": {
+      "name_key": "gear.mountain_boots",
+      "price": 300,
+      "description": "Jump 25% higher for easier exploration.",
+      "effect": "jump",
+      "multiplier": 1.12
+    },
+    "lucky_charm": {
+      "name_key": "gear.lucky_charm",
+      "price": 380,
+      "description": "Earn 25% more coins from every animal.",
+      "effect": "coins",
+      "multiplier": 1.25
+    },
+    "bike": {
+      "name_key": "gear.bike",
+      "price": 25000,
+      "description": "V cycles owned vehicles and On foot. WASD moves; airplane: Space climbs, Ctrl descends.",
+      "effect": "vehicle",
+      "multiplier": 14,
+      "vehicle": true
+    },
+    "car": {
+      "name_key": "gear.car",
+      "price": 100000,
+      "description": "V cycles owned vehicles and On foot. WASD moves; airplane: Space climbs, Ctrl descends.",
+      "effect": "vehicle",
+      "multiplier": 24,
+      "vehicle": true
+    },
+    "airplane": {
+      "name_key": "gear.airplane",
+      "price": 500000,
+      "description": "V cycles owned vehicles and On foot. WASD moves; airplane: Space climbs, Ctrl descends.",
+      "effect": "vehicle",
+      "multiplier": 36,
+      "vehicle": true
+    }
+  }
 }

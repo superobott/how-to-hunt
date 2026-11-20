@@ -1,7 +1,6 @@
 extends Area3D
 ## Collectable presentation only. The world owns inventory, rewards and removal.
 
-const Text := preload("res://scripts/core/game_text.gd")
 const MeshBatch := preload("res://scripts/world/mesh_batch.gd")
 
 var animal_id: String = "rabbit"
@@ -27,51 +26,22 @@ func _ready() -> void:
 	_display = Node3D.new()
 	_display.position.y = 0.48
 	add_child(_display)
-	var leather := Color("d5a34d") if rare else Color("428e80")
-	var trim := Color("76543a")
-	var thread := Color("efdfb5")
 	var gold := Color("f2ce70")
-	_sphere(_display, Vector3.ZERO, Vector3(0.29, 0.27, 0.22), leather)
-	_sphere(_display, Vector3(0.0, -0.04, -0.15), Vector3(0.235, 0.19, 0.09), leather.darkened(0.12))
-	_sphere(_display, Vector3(0.0, 0.13, -0.12), Vector3(0.26, 0.15, 0.14), leather.lightened(0.14))
-	_box(_display, Vector3(0.0, 0.0, -0.236), Vector3(0.065, 0.19, 0.026), trim)
-	_box(_display, Vector3(0.0, 0.012, -0.26), Vector3(0.105, 0.09, 0.025), gold)
-	_box(_display, Vector3(0.0, 0.014, -0.277), Vector3(0.064, 0.048, 0.009), trim)
-	_segment(_display, Vector3(-0.040, 0.015, -0.286), Vector3(0.040, 0.015, -0.286), 0.007, gold)
+	var disk := CylinderMesh.new()
+	disk.top_radius = 0.32
+	disk.bottom_radius = 0.32
+	disk.height = 0.075
+	disk.radial_segments = 16
+	var coin := _mesh(_display, disk, Vector3.ZERO, gold, true)
+	coin.rotation.x = PI / 2.0
 	for side in [-1.0, 1.0]:
-		_segment(_display, Vector3(side * 0.11, 0.18, 0.0), Vector3(side * 0.13, 0.34, 0.0), 0.027, trim)
-	_segment(_display, Vector3(-0.13, 0.34, 0.0), Vector3(0.13, 0.34, 0.0), 0.027, trim)
-	# Short individual stitches follow the flap seam and keep their shared material.
-	for index in 9:
-		var horizontal := -0.19 + float(index) * 0.0475
-		_segment(_display, Vector3(horizontal, 0.074, -0.243), Vector3(horizontal + 0.014, 0.081, -0.246), 0.004, thread)
-	for side in [-1.0, 1.0]:
-		for index in 4:
-			var height := -0.15 + float(index) * 0.05
-			_segment(_display, Vector3(side * 0.212, height, -0.196),
-				Vector3(side * 0.216, height + 0.016, -0.196), 0.004, thread)
-	# A wooden hunt tag hangs from the flap, with a tiny embossed paw.
-	_segment(_display, Vector3(0.17, 0.16, -0.19), Vector3(0.20, -0.015, -0.263), 0.006, trim)
-	var tag := _box(_display, Vector3(0.20, -0.035, -0.255), Vector3(0.095, 0.12, 0.022), Color("c99d65"))
-	tag.rotation.z = -0.14
-	_sphere(_display, Vector3(0.20, -0.046, -0.272), Vector3(0.019, 0.022, 0.006), trim)
-	for index in 3:
-		_sphere(_display, Vector3(0.178 + float(index) * 0.020, -0.012, -0.274), Vector3(0.008, 0.010, 0.005), trim)
-	if rare:
-		_gem(_display, Vector3(0.0, 0.015, -0.291), Vector3(0.026, 0.043, 0.022), Color("8dcfbd"))
+		_box(_display, Vector3(0, 0, side * 0.045), Vector3(0.045, 0.35, 0.015), Color("fff2b5"))
+		_box(_display, Vector3(0, 0.10, side * 0.045), Vector3(0.16, 0.045, 0.015), Color("fff2b5"))
 	MeshBatch.combine(_display)
 	for index in 3:
 		var star := _gem(self, Vector3.ZERO, Vector3(0.055, 0.15 if rare else 0.11, 0.055), gold)
 		_stars.append(star)
-	var label := Label3D.new()
-	label.text = Text.get_text("world.rare_loot" if rare else "world.loot")
-	label.font_size = 30
-	label.pixel_size = 0.008
-	label.position.y = 1.23
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(1.0, 0.86, 0.37) if rare else Color(0.81, 1.0, 0.92)
-	label.outline_size = 6
-	add_child(label)
+
 
 
 func _process(delta: float) -> void:

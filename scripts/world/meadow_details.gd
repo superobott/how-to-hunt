@@ -31,7 +31,7 @@ static func _add_group(parent: Node3D, title: String, mesh: ArrayMesh, color: Co
 	instances.use_custom_data = true
 	instances.mesh = mesh
 	instances.instance_count = count
-	instances.custom_aabb = AABB(Vector3(-61.0, -0.1, -61.0), Vector3(122.0, 28.0, 122.0))
+	instances.custom_aabb = AABB(Vector3(-85.0, -0.1, -85.0), Vector3(170.0, 28.0, 170.0))
 	for index in count:
 		var at := _position(rng)
 		var size := rng.randf_range(0.65, 1.3)
@@ -51,12 +51,12 @@ static func _position(rng: RandomNumberGenerator) -> Vector3:
 	for attempt in 100:
 		var band := rng.randf()
 		var inner := 44.3 if band < 0.65 else (28.2 if band < 0.9 else 14.2)
-		var outer := 58.2 if band < 0.65 else (40.0 if band < 0.9 else 24.0)
+		var outer := 83.0 if band < 0.65 else (40.0 if band < 0.9 else 24.0)
 		var radius := sqrt(lerpf(inner * inner, outer * outer, rng.randf()))
 		var angle := rng.randf_range(0.0, TAU)
 		var at := Vector3(cos(angle) * radius, IslandBuilder.ground_height_at(radius), sin(angle) * radius)
 		# Clear shooting/climbing corridor plus the trail connecting spawn to the merchant.
-		if at.z > 0.0 and absf(at.x) < 2.8:
+		if at.x > 12.0 or (at.z > 0.0 and absf(at.x) < 2.8):
 			continue
 		if at.distance_to(Vector3(8.0, 0.0, 50.0)) < 4.6 or at.distance_to(Vector3(-7.0, 0.0, 51.0)) < 3.7:
 			continue

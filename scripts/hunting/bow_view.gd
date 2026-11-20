@@ -2,9 +2,9 @@ extends Node3D
 ## Camera-attached presentation only. The world owns ammunition, input and projectiles.
 
 const MeshBatch := preload("res://scripts/world/mesh_batch.gd")
-const REST_POSITION := Vector3(0.38, -0.32, -0.65)
-const UPPER_TIP := Vector3(-0.125, 0.46, 0.06)
-const LOWER_TIP := Vector3(-0.125, -0.46, 0.06)
+const REST_POSITION := Vector3(0.32, -0.18, -1.05)
+const UPPER_TIP := Vector3(0.0, 0.40, 0.035)
+const LOWER_TIP := Vector3(0.0, -0.40, 0.035)
 const ACCENTS: Array[Color] = [Color("78bfae"), Color("f5be66"), Color("d9eee4")]
 
 var reload_ratio: float = 0.0
@@ -45,13 +45,16 @@ func _animate(delta: float) -> void:
 		absf(cos(_bob_phase)) * 0.012 * _motion + sin(_age * 1.8) * 0.002 - reload * 0.09,
 		0.0
 	)
-	rotation = Vector3(0.035 + reload * 0.20, -0.10, -0.10 + sin(_bob_phase) * 0.012 * _motion + reload * 0.16)
-	_upper.rotation.z = -draw_amount * 0.045
-	_lower.rotation.z = draw_amount * 0.045
-	var nock := Vector3(-0.125, 0.0, lerpf(0.035, 0.19, draw_amount))
+	rotation = Vector3(reload * 0.20, 0.0, -0.06 + sin(_bob_phase) * 0.012 * _motion + reload * 0.16)
+	_upper.rotation.x = -draw_amount * 0.025
+	_lower.rotation.x = draw_amount * 0.025
+	var nock := Vector3(-0.025, 0.07, lerpf(0.12, 0.28, draw_amount))
 	_set_segment(_top_string, _upper.transform * UPPER_TIP, nock)
 	_set_segment(_bottom_string, nock, _lower.transform * LOWER_TIP)
 	_arrow.position = nock
+	# The shaft passes beside the grip, above the fingers, and converges on the reticle.
+	var target := to_local(global_transform.origin + get_parent().global_basis * Vector3(-position.x, -position.y, -30.0))
+	_arrow.basis = Basis.looking_at(target - nock, Vector3.UP)
 	_arrow.visible = reload <= 0.35
 	var clamped_tier := clampi(tier, 0, ACCENTS.size() - 1)
 	if clamped_tier != _shown_tier:
@@ -75,10 +78,12 @@ func _build_bow() -> void:
 	_lower = Node3D.new()
 	_lower.name = "LowerLimb"
 	add_child(_lower)
+	# The limbs curve forward in depth, in the same plane as the string and shaft.
+	# The old side-to-side curve made the bow look like a crooked stick.
 	var curve: Array[Vector3] = [
-		Vector3(0.0, 0.055, 0.0), Vector3(0.030, 0.13, -0.020),
-		Vector3(0.045, 0.23, -0.035), Vector3(0.020, 0.32, -0.020),
-		Vector3(-0.020, 0.39, 0.005), Vector3(-0.070, 0.44, 0.035), UPPER_TIP,
+		Vector3(0, 0.055, 0), Vector3(0, 0.12, -0.035),
+		Vector3(0, 0.21, -0.065), Vector3(0, 0.29, -0.055),
+		Vector3(0, 0.35, -0.015), UPPER_TIP,
 	]
 	for index in curve.size() - 1:
 		var radius := lerpf(0.023, 0.011, float(index) / float(curve.size() - 2))
@@ -109,8 +114,8 @@ func _build_bow() -> void:
 		_segment(limb, band_start + Vector3(0.012, -0.01 if limb == _upper else 0.01, -0.006),
 			band_start, 0.015, metal)
 		_batch_geometry(limb)
-	_top_string = _segment(self, UPPER_TIP, Vector3(-0.125, 0, 0.19), 0.0023, string_material)
-	_bottom_string = _segment(self, Vector3(-0.125, 0, 0.19), LOWER_TIP, 0.0023, string_material)
+	_top_string = _segment(self, UPPER_TIP, Vector3(-0.025, 0.07, 0.28), 0.0023, string_material)
+	_bottom_string = _segment(self, Vector3(-0.025, 0.07, 0.28), LOWER_TIP, 0.0023, string_material)
 
 	# Rounded knuckles and an overlapping thumb read as a hand around the grip.
 	_sphere(grip, Vector3(0.042, -0.020, 0.075), Vector3(0.047, 0.064, 0.042), skin)
@@ -122,7 +127,7 @@ func _build_bow() -> void:
 	_segment(grip, Vector3(0.049, -0.070, 0.085), Vector3(0.066, -0.112, 0.119), 0.036, skin)
 	var wrist := Vector3(0.065, -0.107, 0.116)
 	var cuff := Vector3(0.093, -0.151, 0.165)
-	var sleeve := Vector3(0.14, -0.23, 0.25)
+	var sleeve := Vector3(0.14, -0.25, 0.17)
 	_segment(grip, wrist, cuff, 0.047, leather)
 	_segment(grip, wrist, wrist.lerp(cuff, 0.18), 0.049, metal)
 	_segment(grip, wrist.lerp(cuff, 0.82), cuff, 0.050, dark_wood)
@@ -150,12 +155,12 @@ func _build_arrow(wood: StandardMaterial3D, metal: StandardMaterial3D) -> void:
 	for index in 3:
 		var angle := float(index) * TAU / 3.0
 		var feather := PrismMesh.new()
-		feather.size = Vector3(0.034, 0.004, 0.105)
+		feather.size = Vector3(0.022, 0.003, 0.075)
 		var visual := _add_mesh(_arrow, feather,
-			Vector3(cos(angle) * 0.019, sin(angle) * 0.019, -0.079), _accent)
+			Vector3(cos(angle) * 0.012, sin(angle) * 0.012, -0.079), _accent)
 		visual.rotation.z = angle
-		_segment(_arrow, Vector3(cos(angle) * 0.033, sin(angle) * 0.033, -0.123),
-			Vector3(cos(angle) * 0.033, sin(angle) * 0.033, -0.05), 0.0017, feather_edge)
+		_segment(_arrow, Vector3(cos(angle) * 0.021, sin(angle) * 0.021, -0.123),
+			Vector3(cos(angle) * 0.021, sin(angle) * 0.021, -0.05), 0.0017, feather_edge)
 	_batch_geometry(_arrow)
 
 

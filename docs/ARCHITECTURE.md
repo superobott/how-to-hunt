@@ -1,5 +1,23 @@
 # Architecture
 
+## Accepted current baseline
+The current working prototype is the intended gameplay baseline. Windows ships first;
+Linux follows Windows stability. The next milestone is Steam co-op for 1-4 players,
+better stylized graphics, and clearer expedition goals.
+
+Current gameplay starts with a knife and automatically collects dropped coins. It includes
+nine species, seven bows, five equipment upgrades, three arcade vehicles, survival,
+camera switching, and a pause/settings menu. Terrain is a continuous mountain.
+The older slice/graphics descriptions below are historical where they conflict with this
+summary or current code. Inventory selling remains for compatibility and migration.
+
+Experimental co-op uses `scripts/core/expedition.gd` for the shared wallet and individual
+equipment, and `scripts/world/coop_session.gd` for host simulation and snapshots.
+Clients submit input and action intents; the host validates movement, combat, pickup and
+store proximity, cooldowns, equipment and prices. `SteamService` owns all Steam calls.
+Guests restore their solo state on departure; their session snapshots never write solo saves.
+See [COOP.md](COOP.md) for the approved progression model, tests and deployment blocker.
+
 ## Engine choice: Godot 4 with GodotSteam
 - **Reviewable:** scenes, resources and project settings are text files, so diffs are readable in pull requests and CodeRabbit can review them.
 - **Headless:** the same binary runs tests and exports from the command line, which keeps CI simple.
@@ -41,8 +59,10 @@ A single file, `data/config/game_config.json`, holds the Steam App ID. `steam_ap
 
 `tests/run_tests.sh` runs both suites and is what contributors and CI run. Godot 4.4 gives a runner no hook to catch script errors, so a test that hits a runtime error (such as calling a method on null) would print `SCRIPT ERROR` yet still report PASS. The wrapper fails on that output.
 
-## Multiplayer (planned)
-Host-authoritative over Steam networking, 1 to 4 players, shared island and money, per-player inventory.
+## Multiplayer (experimental)
+Host-authoritative, 1 to 4 players, shared island and money, per-player equipment.
+Four-process ENet loopback testing covers gameplay; real Steam testing remains blocked.
+The remaining slice descriptions below are historical where they describe loot selling.
 
 ## Playable hunting slice
 - `data/gameplay.json` defines animals, bow tiers, economy, XP thresholds, and spawn settings.

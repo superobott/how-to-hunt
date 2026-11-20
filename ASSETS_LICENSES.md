@@ -11,7 +11,10 @@ Placeholder assets must be marked as such so they are easy to find and replace.
 | Component | Version | License |
 |-----------|---------|---------|
 | Godot Engine | 4.4.x | MIT |
-| GodotSteam (planned) | TBD | MIT |
+| GodotSteam GDExtension (Windows x64, staged/disabled) | 4.24, Godot 4.4+ | MIT; [bundled notice](addons/godotsteam/license.md) |
+| Steamworks runtime (`steam_api64.dll`, bundled by GodotSteam) | From approved 4.24 package | Valve Steamworks SDK terms; retain applicable notices for distribution |
+
+Package source, archive hash and installation status: [dependency record](docs/COOP.md#dependency-record).
 
 ## Placeholder content
 | Content | Where | Note |

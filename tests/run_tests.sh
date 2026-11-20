@@ -24,7 +24,7 @@ run_suite() {
 	shift
 	echo "=== $label ==="
 	local output status
-	output="$("$GODOT" --headless --path . "$@" 2>&1)"
+	output="$("$GODOT" --headless --path . "$@" -- --offline-tests 2>&1)"
 	status=$?
 	printf '%s\n' "$output"
 
@@ -34,7 +34,7 @@ run_suite() {
 		return
 	fi
 	# Here-string, not a pipe: with pipefail, grep -q closing the pipe early could hide a match.
-	if grep -q "SCRIPT ERROR" <<< "$output"; then
+	if grep -Eq "SCRIPT ERROR|Parse Error|Compile Error" <<< "$output"; then
 		echo "run_tests.sh: GDScript runtime error found in $label output" >&2
 		overall=1
 	fi
@@ -44,5 +44,8 @@ run_suite "unit tests" -s tests/run_tests.gd
 # --fixed-fps makes every frame exactly 1/60 s, so physics is deterministic and runs fast.
 run_suite "smoke test" --fixed-fps 60 -s tests/smoke_world.gd
 run_suite "hunting loop" --fixed-fps 60 -s tests/smoke_hunt.gd
+run_suite "survival" --fixed-fps 60 -s tests/smoke_survival.gd
+run_suite "UI" --fixed-fps 60 -s tests/smoke_ui.gd
+run_suite "vehicles" --fixed-fps 60 -s tests/smoke_vehicles.gd
 
 exit "$overall"

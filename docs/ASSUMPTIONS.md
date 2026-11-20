@@ -1,5 +1,11 @@
 # Assumptions
 
+The table below is historical. The user has confirmed the current uncommitted prototype
+as the intended baseline, Windows first, Linux later, and Steam co-op plus improved
+visuals and clearer goals as the next milestone. Older terrain, economy and content
+counts must not override current code. Provisional performance targets are 1080p/60 FPS
+and a 720p/30 FPS Low fallback; no minimum hardware requirement has been verified.
+
 Decisions made without asking, recorded so they can be revisited.
 
 | # | Assumption | Why | Revisit when |

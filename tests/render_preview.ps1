@@ -1,4 +1,4 @@
-param([string]$Godot = $env:GODOT, [string]$ProjectPath = '')
+param([string]$Godot = $env:GODOT, [string]$ProjectPath = '', [ValidateSet('hunt', 'ui')][string]$Scenario = 'hunt')
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 if (-not $Godot) {
@@ -13,6 +13,8 @@ $stdoutPath = Join-Path $previewRoot 'render.stdout.log'
 $stderrPath = Join-Path $previewRoot 'render.stderr.log'
 $engineLog = Join-Path $previewRoot 'render.engine.log'
 $engineArgs = @('--path', ('"' + $projectRoot + '"'), '--log-file', ('"' + $engineLog + '"'), '--rendering-method', 'gl_compatibility', '--rendering-driver', 'opengl3', '--audio-driver', 'Dummy', '--resolution', '1280x720', '--position', '-1800,-900', '-s', 'tests/preview_hunt.gd')
+if ($Scenario -eq 'ui') { $engineArgs[-1] = 'tests/smoke_ui.gd' }
+$engineArgs += @('--', '--offline-tests')
 $process = Start-Process -FilePath $Godot -ArgumentList $engineArgs -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
 if (-not $process.WaitForExit(60000)) {
     $process.Kill()

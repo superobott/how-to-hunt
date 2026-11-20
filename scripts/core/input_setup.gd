@@ -17,13 +17,14 @@ const SHOOT := "hunt_shoot"
 const AIM := "hunt_aim"
 const INTERACT := "hunt_interact"
 const UPGRADE := "hunt_upgrade"
+const SWAP := "hunt_swap"
 
 const STICK_DEADZONE := 0.2
 
 const ALL_ACTIONS: Array[String] = [
 	MOVE_FORWARD, MOVE_BACK, MOVE_LEFT, MOVE_RIGHT, JUMP, SPRINT,
 	LOOK_LEFT, LOOK_RIGHT, LOOK_UP, LOOK_DOWN,
-	SHOOT, AIM, INTERACT, UPGRADE,
+	SHOOT, AIM, INTERACT, UPGRADE, SWAP,
 ]
 
 
@@ -43,6 +44,7 @@ static func ensure_actions() -> void:
 	_ensure(SHOOT, [_mouse(MOUSE_BUTTON_LEFT), _axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)])
 	_ensure(AIM, [_mouse(MOUSE_BUTTON_RIGHT), _axis(JOY_AXIS_TRIGGER_LEFT, 1.0)])
 	_ensure(INTERACT, [_key(KEY_E), _button(JOY_BUTTON_X)])
+	_ensure(SWAP, [_key(KEY_Q), _button(JOY_BUTTON_RIGHT_SHOULDER)])
 	_ensure(UPGRADE, [_key(KEY_U), _button(JOY_BUTTON_Y)])
 	if InputMap.has_action("ui_cancel"):
 		var cancel := _button(JOY_BUTTON_B)

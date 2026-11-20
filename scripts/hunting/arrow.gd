@@ -1,4 +1,5 @@
 extends Node3D
+signal hit_confirmed
 ## Swept ray movement keeps arrows from passing through small animals at high speed.
 
 const HuntFX := preload("res://scripts/hunting/hunt_fx.gd")
@@ -47,6 +48,7 @@ func _physics_process(delta: float) -> void:
 		var collider: Object = hit["collider"]
 		if is_instance_valid(collider) and collider.has_method("take_hit"):
 			collider.call("take_hit", damage, hit["position"], shot_origin)
+			hit_confirmed.emit()
 		else:
 			HuntFX.burst(get_parent(), global_position, Color(0.88, 0.87, 0.72))
 		queue_free()

@@ -1,5 +1,11 @@
 # Game design
 
+Current baseline: knife start, automatic coin pickup, nine species, seven bows,
+five equipment upgrades, vehicles, survival, camera switching and settings.
+The older "Current playable slice" section below records the initial prototype,
+not the accepted current behavior. Steam co-op is the next milestone; expedition
+objectives and region unlocks remain proposed design rather than implemented features.
+
 **How to Hunt** is a first-person, physics-based hunting and progression game with a cartoony, low-poly look.
 
 ## Setting
